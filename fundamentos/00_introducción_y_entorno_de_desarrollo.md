@@ -75,14 +75,19 @@ No profundizamos aquí porque requiere haber visto POO, excepciones y coleccione
 2.Crear una carpeta Java en su unidad o ruta de su preferencia, por ejemplo **C:\Java** y descomprimir archivo, como se muestra en la siguiente imágen
 <img width="971" height="218" alt="image" src="https://github.com/user-attachments/assets/d16d2302-8450-4aaa-aaf6-878ec47cbf81" />
 
-3. Ejecutar el instalador. Marcar la opción **"Set JAVA_HOME variable"** y **"Add to PATH"** si el instalador las ofrece (Temurin las incluye como checkbox).
-4. Verificar instalación abriendo `cmd` o PowerShell:
+3. Crear la variable de entorno **JAVA_HOME** y agregar al path la ruta del JDK
+   
+   <img width="1257" height="658" alt="image" src="https://github.com/user-attachments/assets/753f19a2-8415-43c9-a8e9-748c7b3a46b5" />
+
+   
+
+5. Verificar instalación abriendo `cmd` o PowerShell:
    ```powershell
    java -version
    javac -version
    ```
    Ambos deben responder `21.x.x`.
-5. Si `java -version` no es reconocido, configurar manualmente las variables de entorno:
+6. Si `java -version` no es reconocido, configurar manualmente las variables de entorno:
    - `JAVA_HOME` → ruta de instalación, ej. `C:\Program Files\Eclipse Adoptium\jdk-21.0.x`
    - Agregar `%JAVA_HOME%\bin` al `PATH`.
 
