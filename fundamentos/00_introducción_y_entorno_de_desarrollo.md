@@ -76,10 +76,13 @@ No profundizamos aquí porque requiere haber visto POO, excepciones y coleccione
 <img width="971" height="218" alt="image" src="https://github.com/user-attachments/assets/d16d2302-8450-4aaa-aaf6-878ec47cbf81" />
 
 3. Crear la variable de entorno **JAVA_HOME** y agregar al path la ruta del JDK
-   
+  * Agregar la variable de entorno JAVA_HOME y definir la carpeta que contiene el JDK
+        
    <img width="1257" height="658" alt="image" src="https://github.com/user-attachments/assets/753f19a2-8415-43c9-a8e9-748c7b3a46b5" />
-
    
+  * Agregar a la variable **path** la carpeta que contiene los archivos binarios del JDK, para utilizarlos en cualquier ubicación del sistema operativo
+    
+  <img width="734" height="637" alt="image" src="https://github.com/user-attachments/assets/d41f77e8-7761-427b-875c-2ce4b4669251" />
 
 5. Verificar instalación abriendo `cmd` o PowerShell:
    ```powershell
@@ -87,9 +90,10 @@ No profundizamos aquí porque requiere haber visto POO, excepciones y coleccione
    javac -version
    ```
    Ambos deben responder `21.x.x`.
-6. Si `java -version` no es reconocido, configurar manualmente las variables de entorno:
-   - `JAVA_HOME` → ruta de instalación, ej. `C:\Program Files\Eclipse Adoptium\jdk-21.0.x`
-   - Agregar `%JAVA_HOME%\bin` al `PATH`.
+
+   <img width="623" height="91" alt="image" src="https://github.com/user-attachments/assets/29acbb87-2ee7-4dd9-9b29-9d152b1ab98d" />
+
+7. Si `java -version` no es reconocido, reiniciar el equipo
 
 ### macOS
 
