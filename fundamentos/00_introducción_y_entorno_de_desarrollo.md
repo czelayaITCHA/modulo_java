@@ -13,28 +13,28 @@ Características clave que el estudiante debe poder explicar con sus propias pal
 - **Multihilo** de forma nativa.
 - **Ecosistema empresarial masivo**: Spring, Hibernate, Maven/Gradle — la base de lo que verán más adelante en el módulo.
 
-Java 21 (LTS, septiembre 2023) es la versión que usaremos porque introduce mejoras que simplifican mucho el código de consola que escribiremos: `records`, `pattern matching` para `switch`, `text blocks`, y *virtual threads* (aunque este último tema es más avanzado y se retoma en el módulo de backend).
+Java 21 (LTS, septiembre 2023) es la versión que usaremos porque introduce mejoras que simplifican mucho el código de consola que escribiremos: `records`, `pattern matching` para `switch`, `text blocks`, y *virtual threads* (aunque este último tema es más avanzado y se retoma en el desarrollo backend).
 
 ## 0.2 JVM, JDK y JRE — la relación que todos confunden
 
 ```
                 ┌───────────────────────────────────────────┐
-                │                    JDK                     │
-                │   (Java Development Kit - para programar)  │
-                │                                             │
-                │   ┌───────────────────────────────────┐    │
-                │   │               JRE                  │    │
-                │   │  (Java Runtime Environment -       │    │
-                │   │   para ejecutar programas Java)    │    │
-                │   │                                     │    │
-                │   │   ┌───────────────────────────┐    │    │
-                │   │   │            JVM             │    │    │
-                │   │   │  (Java Virtual Machine -   │    │    │
-                │   │   │  ejecuta el bytecode)      │    │    │
-                │   │   └───────────────────────────┘    │    │
-                │   │   + Librerías estándar (java.*)   │    │
-                │   └───────────────────────────────────┘    │
-                │   + javac, jar, javadoc, jdb, jshell...    │
+                │                    JDK                    │
+                │   (Java Development Kit - para programar) │
+                │                                           │
+                │   ┌───────────────────────────────────┐   │
+                │   │               JRE                 │   │
+                │   │  (Java Runtime Environment -      │   │
+                │   │   para ejecutar programas Java)   │   │
+                │   │                                   │   │
+                │   │   ┌───────────────────────────┐   │   │
+                │   │   │            JVM            │   │   │
+                │   │   │  (Java Virtual Machine -  │   │   │
+                │   │   │  ejecuta el bytecode)     │   │   │
+                │   │   └───────────────────────────┘   │   │
+                │   │   + Librerías estándar (java.*)   │   │
+                │   └───────────────────────────────────┘   │
+                │   + javac, jar, javadoc, jdb, jshell...   │
                 └───────────────────────────────────────────┘
 ```
 
@@ -63,9 +63,9 @@ java HolaMundo         # la JVM carga y ejecuta el bytecode
 
 1. Tu código Java usa interfaces estándar: `Connection`, `Statement`, `PreparedStatement`, `ResultSet`.
 2. Un **driver JDBC** específico del motor (ej. `postgresql-42.x.jar`) traduce esas llamadas al protocolo real de la base de datos.
-3. Esto es exactamente lo que hace **Spring Data JPA/Hibernate** por debajo — entender JDBC "a pelo" primero hace que entender el ORM después sea mucho más fácil, en lugar de una caja negra mágica.
+3. Esto es exactamente lo que hace **Spring Data JPA/Hibernate** por debajo — entender JDBC "a detalle" primero hace que entender el ORM después sea mucho más fácil, en lugar de una caja negra mágica.
 
-No profundizamos aquí porque requiere haber visto POO, excepciones y colecciones primero. Se retoma en `06-jdbc-conexion-base-datos.md`.
+No profundizamos aquí porque requiere haber visto POO, excepciones y colecciones primero.
 
 ## 0.4 Instalación del JDK 21
 
