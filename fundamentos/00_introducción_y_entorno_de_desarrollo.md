@@ -71,15 +71,18 @@ No profundizamos aquí porque requiere haber visto POO, excepciones y coleccione
 
 ### Windows
 
-1. Descargar el instalador desde el sitio oficial de **Eclipse Temurin** (recomendado sobre Oracle JDK para uso educativo/comercial sin restricciones de licencia) o desde Oracle: `https://adoptium.net` → seleccionar **JDK 21 (LTS)**, sistema operativo Windows, arquitectura x64, formato `.msi`.
-2. Ejecutar el instalador. Marcar la opción **"Set JAVA_HOME variable"** y **"Add to PATH"** si el instalador las ofrece (Temurin las incluye como checkbox).
-3. Verificar instalación abriendo `cmd` o PowerShell:
+1. Descargar el zip desde el sitio oficial de **https://jdk.java.net/archive/** → seleccionar **21.0.2 (build 21.0.2+13) (LTS)**, sistema operativo Windows, arquitectura x64
+2.Crear una carpeta Java en su unidad o ruta de su preferencia, por ejemplo **C:\Java** y descomprimir archivo, como se muestra en la siguiente imágen
+<img width="971" height="218" alt="image" src="https://github.com/user-attachments/assets/d16d2302-8450-4aaa-aaf6-878ec47cbf81" />
+
+3. Ejecutar el instalador. Marcar la opción **"Set JAVA_HOME variable"** y **"Add to PATH"** si el instalador las ofrece (Temurin las incluye como checkbox).
+4. Verificar instalación abriendo `cmd` o PowerShell:
    ```powershell
    java -version
    javac -version
    ```
    Ambos deben responder `21.x.x`.
-4. Si `java -version` no es reconocido, configurar manualmente las variables de entorno:
+5. Si `java -version` no es reconocido, configurar manualmente las variables de entorno:
    - `JAVA_HOME` → ruta de instalación, ej. `C:\Program Files\Eclipse Adoptium\jdk-21.0.x`
    - Agregar `%JAVA_HOME%\bin` al `PATH`.
 
