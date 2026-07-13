@@ -111,9 +111,9 @@ java -version
 javac -version
 ```
 
-## 0.5 Instalación de IntelliJ IDEA Community Edition
+## 0.5 Instalación de IntelliJ IDEA
 
-1. Descargar desde `https://www.jetbrains.com/idea/download/` → pestaña **Community Edition** (gratuita, open source; suficiente para todo este módulo — no necesitamos la Ultimate con soporte Spring integrado, ya que instalaremos Spring Boot manualmente vía Maven más adelante).
+1. Descargar desde `https://www.jetbrains.com/idea/download/`
 2. Instalar con las opciones por defecto. En Windows, marcar "Add launchers dir to PATH" y ".java" para asociar archivos.
 3. Al abrir por primera vez:
    - **New Project** → **New Project (Java)**.
@@ -169,7 +169,7 @@ public class DiagnosticoEntorno {
 
 1. Compilar `HolaMundo.java` desde la terminal con `javac`.
 2. Abrir el archivo `.class` generado con un editor hexadecimal o con `xxd HolaMundo.class | head` (Linux/macOS) o el comando `javap -c HolaMundo` (viene con el JDK).
-3. Pedir a los estudiantes que identifiquen en la salida de `javap -c` las instrucciones de bytecode correspondientes a la llamada `System.out.println`.
-4. Preguntas de reflexión para entregar por escrito (media página): ¿por qué el archivo `.class` no es legible como texto plano? ¿Qué significa que el bytecode sea "independiente de la plataforma" a partir de lo que observaron?
+3. Identificar en la salida de `javap -c` las instrucciones de bytecode correspondientes a la llamada `System.out.println`.
+4. Preguntas: ¿por qué el archivo `.class` no es legible como texto plano? ¿Qué significa que el bytecode sea "independiente de la plataforma" a partir de lo que observaron?
 
 > Objetivo pedagógico: que la JVM deje de ser un concepto abstracto de diapositiva y se vuelva algo que "tocaron" con sus manos antes de empezar a programar en serio.
