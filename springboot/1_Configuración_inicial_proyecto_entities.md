@@ -8,6 +8,7 @@ En el navegador escribir **spring initializr**, haga click en el primer enlace, 
 Luego haga click en generar o Ctrl + Enter, va descargar un archivo .zip con el nombre que definió al proyecto
 
 ## 1.2 Abrir proyecto y hacer configuraciones iniciales
+
 ### 1.2.1 Descomprimir el proyecto en una carpeta que identifique o localice fácilmente
 
 <img width="830" height="315" alt="image" src="https://github.com/user-attachments/assets/66f04e64-48ff-4519-a389-6727c87cb174" />
