@@ -104,6 +104,41 @@ public class Marca implements Serializable {
 }
 
 ```
-### 1.3.2 Programar la entidad Modelo
+Re ejecute el proyecto y verifique que haya sido creada la tabla marcas en PostgreSQL
 
+### 1.3.2 Programar la entidad Modelo
+```java
+package com.devsv.autofix_api.entities;
+
+import jakarta.persistence.*;
+import lombok.AllArgsConstructor;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
+
+import java.io.Serializable;
+
+@AllArgsConstructor
+@NoArgsConstructor
+@Setter
+@Getter
+@Entity
+@Table(name = "modelos", schema = "public", catalog = "autofix_db")
+public class Modelo implements Serializable {
+    private static final long serialVersionUID = 1L;
+
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Column(name = "id", nullable = false)
+    private Integer id;
+
+    @Column(name = "nombre", nullable = false, length = 50)
+    private String nombre;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "marca_id", nullable = false)
+    private Marca marca;
+}
+
+```
 
