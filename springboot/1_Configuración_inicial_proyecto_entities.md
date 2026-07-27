@@ -17,11 +17,46 @@ Luego haga click en generar o Ctrl + Enter, va descargar un archivo .zip con el 
 
 <img width="1014" height="416" alt="image" src="https://github.com/user-attachments/assets/701aed0f-a974-4ee1-b042-cd74f4da8f63" />
 
-Buscarmos y seleccionamos el proyecto descomprimidor "autofix-api"
+Buscarmos y seleccionamos el proyecto descomprimidor "autofix-api" (lo abrimos en una nueva ventana)
 
 <img width="1021" height="486" alt="image" src="https://github.com/user-attachments/assets/31b5bf8a-6726-4244-8d36-d82126b3e1ea" />
 
+### 1.2.3 Crear estructura de paquetes del proyecto
+Para organizar el código por funcionalidades creamos la siguiente estructura de packages
 
+### 1.2.4 Personalizar el archivo application.properties
+
+```xml
+# 1. Configuración general de la aplicación
+spring.application.name=autofix-api
+server.address=0.0.0.0
+server.port=${SERVER_PORT:8080}
+
+# 2. Configuración de Seguridad y JWT
+
+
+# 3. Conxión a la base de datos (PostgreSQL)
+spring.datasource.url=jdbc:postgresql://${DB_HOST:localhost}:${DB_PORT:5432}/${DB_NAME:autofix_db}
+spring.datasource.username=${DB_USER:postgres}
+spring.datasource.password=${DB_PASSWORD:postgres}
+
+# 4. Configuración de Persistencia (JPA / Hibernate)
+spring.jpa.properties.hibernate.dialect=org.hibernate.dialect.PostgreSQLDialect
+spring.jpa.hibernate.ddl-auto=${JPA_DDL_AUTO:update}
+spring.jpa.show-sql=${JPA_SHOW_SQL:true}
+spring.jpa.properties.hibernate.format_sql=true
+
+# 5. Internacionalización y zona horaria (El Salvador)
+spring.jpa.properties.hibernate.jdbc.time_zone=America/El_Salvador
+spring.jackson.time-zone=America/El_Salvador
+spring.jackson.locale=es_SV
+
+# 6. Definir tamaños máximos de archivos
+spring.servlet.multipart.max-file-size=10MB
+spring.servlet.multipart.max-request-size=10MB
+app.upload.dir=${UPLOAD_DIR:uploads}
+server.compression.enabled=true
+```
 
 
 
