@@ -61,6 +61,14 @@ app.upload.dir=${UPLOAD_DIR:uploads}
 server.compression.enabled=true
 ```
 
+### 1.2.5 Ejecutar el proyecto para garantizar que funcione bien hasta el momento
+
+* Nota: Es importante crear primero la base de datos autofix_db en PostgreSQL
+Al ejecutar el proyecto, hará el proceso de compilación y ejecución, el resultado será similar al siguiente
+
+ <img width="1008" height="763" alt="image" src="https://github.com/user-attachments/assets/fe050394-a95c-402e-b4f8-47441c8133e8" />
+
+
 
 
 
