@@ -24,6 +24,9 @@ Buscarmos y seleccionamos el proyecto descomprimidor "autofix-api" (lo abrimos e
 ### 1.2.3 Crear estructura de paquetes del proyecto
 Para organizar el código por funcionalidades creamos la siguiente estructura de packages
 
+<img width="411" height="691" alt="image" src="https://github.com/user-attachments/assets/d5c472cb-eab3-4458-bcf1-16b4fed83199" />
+
+
 ### 1.2.4 Personalizar el archivo application.properties
 
 ```xml
