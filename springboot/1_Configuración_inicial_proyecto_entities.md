@@ -74,6 +74,36 @@ Al ejecutar el proyecto, hará el proceso de compilación y ejecución, el resul
 
 ## 1.3 Programar las clases entidades
 
+### 1.3.1 Programar la entidad Marca
+Comenzamos a crear las entidades en un orden lógico, es decir aquellas que no dependen de otras o que ya estén creadas para relacionarlas
 
+```java
+package com.devsv.autofix_api.entities;
+
+import jakarta.persistence.*;
+import lombok.*;
+
+import java.io.Serializable;
+
+@AllArgsConstructor
+@NoArgsConstructor
+@Getter
+@Setter
+@Entity
+@Table(name = "marcas", schema = "public", catalog = "autofix_db")
+public class Marca implements Serializable {
+    private static final long serialVersionUID = 1L;
+
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Integer id;
+
+    @Column(name = "nombre", nullable = false, length = 50, unique = true)
+    private String nombre;
+
+}
+
+```
+### 1.3.2 Programar la entidad Modelo
 
 
