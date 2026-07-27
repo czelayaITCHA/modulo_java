@@ -107,6 +107,7 @@ public class Marca implements Serializable {
 Re ejecute el proyecto y verifique que haya sido creada la tabla marcas en PostgreSQL
 
 ### 1.3.2 Programar la entidad Modelo
+
 ```java
 package com.devsv.autofix_api.entities;
 
@@ -139,6 +140,5 @@ public class Modelo implements Serializable {
     @JoinColumn(name = "marca_id", nullable = false)
     private Marca marca;
 }
-
 ```
 
