@@ -1,4 +1,8 @@
 # 1. Crear API Rest con Java Spring Boot 4 - Configuración inicial del proyecto
+* Diagrama E-R para ejemplo de clase
+  
+  <img width="870" height="607" alt="image" src="https://github.com/user-attachments/assets/c97cc9d2-97ed-4acf-91ef-8cec2a92cf6b" />
+
 
 ## 1.1 Crear proyecto en Spring Initializr
 En el navegador escribir **spring initializr**, haga click en el primer enlace, que lo lleva a la interfaz de la siguiente imágen, llenar los datos y agregar dependencias iniciales
@@ -68,6 +72,7 @@ Al ejecutar el proyecto, hará el proceso de compilación y ejecución, el resul
 
  <img width="1008" height="763" alt="image" src="https://github.com/user-attachments/assets/fe050394-a95c-402e-b4f8-47441c8133e8" />
 
+## 1.3 Programar las clases entidades
 
 
 
