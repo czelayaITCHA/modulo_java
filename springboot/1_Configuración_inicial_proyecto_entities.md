@@ -290,3 +290,281 @@ public class Role implements Serializable {
 }
 
 ```
+### 1.3.7 Crear la entidad Usuario
+
+```java
+package com.devsv.autofix_api.entities;
+
+import jakarta.persistence.*;
+import lombok.*;
+
+import java.io.Serializable;
+
+@NoArgsConstructor
+@AllArgsConstructor
+@Setter
+@Getter
+@Entity
+@Table(name = "usuarios", schema = "public", catalog = "autofix_db")
+public class Usuario implements Serializable {
+    private static final long serialVersionUID = 1L;
+
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Integer id;
+
+    @Column(nullable = false, unique = true, length = 20)
+    private String username;
+
+    @ToString.Exclude //evitar que el password aparezca en el log
+    @Column(nullable = false, length = 250)
+    private String password;
+
+    @Column(nullable = false)
+    private Boolean activo;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "empleado_id")
+    private Empleado empleado;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "cliente_id")
+    private Cliente cliente;
+
+}
+```
+
+### 1.3.8 Crear la entidad UsuarioRole
+
+```java
+package com.devsv.autofix_api.entities;
+
+import jakarta.persistence.*;
+import lombok.AllArgsConstructor;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
+
+import java.io.Serializable;
+
+@AllArgsConstructor
+@NoArgsConstructor
+@Setter
+@Getter
+@Entity
+@Table(name = "usuarios_roles", schema = "public", catalog = "autofix_db")
+public class UsuarioRole implements Serializable {
+    private static final long serialVersionUID = 1L;
+
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Integer id;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "usuario_id", nullable = false)
+    private Usuario usuario;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "role_id", nullable = false)
+    private Role role;
+}
+```
+
+* Antes de crear las entidades de **RepuestoServicio** y **OrdenTrabajo** vamos a crear en el package de **enums** los enums que vamos a necesitar en ambas entidades
+* enum TipoItem
+  
+```java
+ package com.devsv.autofix_api.enums;
+
+public enum TipoItem {
+    REPUESTO,
+    SERVICIO
+}
+```
+
+* enum EstadoOrden
+
+```java
+package com.devsv.autofix_api.enums;
+
+public enum EstadoOrden {
+    PENDIENTE,
+    EN_PROCESO,
+    COMPLETADA,
+    ENTREGADA,
+    CANCELADA
+}
+```
+
+### 1.3.9 Crear la entidad RepuestoServicio
+```java
+package com.devsv.autofix_api.entities;
+
+import com.devsv.autofix_api.enums.TipoItem;
+import jakarta.persistence.*;
+import lombok.AllArgsConstructor;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
+
+import java.io.Serializable;
+import java.math.BigDecimal;
+
+@NoArgsConstructor
+@AllArgsConstructor
+@Setter
+@Getter
+@Entity
+@Table(name = "repuestos_servicios", schema = "public", catalog = "autofix_db")
+public class RepuestoServicio implements Serializable {
+    private static final long serialVersionUID = 1L;
+
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Integer id;
+
+    @Column(nullable = false, length = 100)
+    private String nombre;
+
+    @Column(length = 250)
+    private String descripcion;
+
+    @Column(nullable = false, precision = 12, scale = 2)
+    private BigDecimal precio;
+
+    @Column(nullable = false)
+    private Integer stock;
+
+    @Column(length = 80)
+    private String foto;
+
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false, length = 10)
+    private TipoItem tipo;
+}
+```
+
+### 1.3.10 Crear la entidad OrdenTrabajo
+```java
+package com.devsv.autofix_api.entities;
+
+import com.devsv.autofix_api.enums.EstadoOrden;
+import jakarta.persistence.*;
+import lombok.*;
+
+import java.io.Serializable;
+import java.math.BigDecimal;
+import java.time.LocalDate;
+import java.util.ArrayList;
+import java.util.List;
+
+@Entity
+@Table(
+        name = "ordenes_trabajos", schema = "public", catalog = "autofix_db",
+        indexes = {
+                @Index(name = "idx_ordenes_vehiculo_id", columnList = "vehiculo_id"),
+                @Index(name = "idx_ordenes_mecanico_id", columnList = "mecanico_id"),
+                @Index(name = "idx_ordenes_estado", columnList = "estado"),
+                @Index(name = "idx_ordenes_fecha", columnList = "fecha")
+        }
+)
+@Getter
+@Setter
+@NoArgsConstructor
+@AllArgsConstructor
+@Builder
+public class OrdenTrabajo implements Serializable {
+    private static final long serialVersionUID = 1L;
+
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
+
+    @Column(nullable = false, unique = true, length = 10)
+    private String numero;
+
+    @Column(nullable = false)
+    private LocalDate fecha;
+
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false, length = 10)
+    private EstadoOrden estado;
+
+    @Column(length = 250)
+    private String observaciones;
+
+    @Column(nullable = false, precision = 12, scale = 2)
+    private BigDecimal total;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "vehiculo_id", nullable = false)
+    private Vehiculo vehiculo;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "mecanico_id")
+    private Empleado mecanico;
+
+    @Version
+    private Long version; //evitar que dos mecanicos escriban en la misma orden
+
+    // Relación Bidireccional, porque esta sí es una transacción maestro-detalle.
+    // cascade = ALL   -> guardar/eliminar la orden guarda/elimina sus detalles automáticamente.
+    // orphanRemoval   -> si un detalle se quita de esta lista, se borra de la BD (no queda huérfano).
+    // fetch = LAZY    -> NUNCA se carga junto con la orden a menos que se pida explícitamente.
+    @OneToMany(mappedBy = "ordenTrabajo", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
+    @Builder.Default
+    @ToString.Exclude   // evita recursión infinita con DetalleOrden.ordenTrabajo en toString()
+    private List<DetalleOrden> detalleOrden = new ArrayList<>();
+}
+```
+
+### 1.3.11 Crear la entidad DetalleOrden
+```java
+package com.devsv.autofix_api.entities;
+
+import jakarta.persistence.*;
+import lombok.*;
+
+import java.io.Serializable;
+import java.math.BigDecimal;
+
+
+@Entity
+@Table(
+        name = "detalle_ordenes", schema = "public", catalog = "autofix_db",
+        indexes = {
+                @Index(name = "idx_detalle_orden_trabajo_id", columnList = "orden_trabajo_id"),
+                @Index(name = "idx_detalle_repuesto_servicio_id", columnList = "repuesto_servicio_id")
+        }
+)
+@Getter
+@Setter
+@NoArgsConstructor
+@AllArgsConstructor
+@Builder
+public class DetalleOrden implements Serializable {
+    private static final long serialVersionUID = 1L;
+
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
+
+    @Column(nullable = false)
+    private Integer cantidad;
+
+    @Column(name = "precio_unitario", nullable = false, precision = 12, scale = 2)
+    private BigDecimal precioUnitario;
+
+    @Column(nullable = false, precision = 12, scale = 2)
+    private BigDecimal subtotal;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "orden" +
+            "_trabajo_id", nullable = false)
+    private OrdenTrabajo ordenTrabajo;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "repuesto_servicio_id", nullable = false)
+    private RepuestoServicio repuestoServicio;
+}
+```
