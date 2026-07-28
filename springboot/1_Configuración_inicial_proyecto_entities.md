@@ -141,4 +141,87 @@ public class Modelo implements Serializable {
     private Marca marca;
 }
 ```
+### 1.3.3 Crear la entidad Cliente
 
+```java
+package com.devsv.autofix_api.entities;
+
+import jakarta.persistence.*;
+import lombok.AllArgsConstructor;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
+import java.io.Serializable;
+
+@AllArgsConstructor
+@NoArgsConstructor
+@Setter
+@Getter
+@Entity
+@Table(name = "clientes", schema = "public", catalog = "autofix_db")
+public class Cliente implements Serializable {
+    private static final long serialVersionUID = 1L;
+
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Integer id;
+
+    @Column(name = "nombre", nullable = false, length = 80)
+    private String nombre;
+
+    @Column(name = "telefono", nullable = false, length = 15)
+    private String telefono;
+
+    @Column(name = "email", nullable = true, length = 50)
+    private String email;
+}
+
+```
+
+### 1.3.4 Programar la entidad Vehiculo
+
+```java
+package com.devsv.autofix_api.entities;
+
+
+import jakarta.persistence.*;
+import lombok.*;
+
+@Entity
+@Table(
+        name = "vehiculos", schema = "public", catalog = "autofix_db",
+        indexes = {
+                @Index(name = "idx_vehiculos_cliente_id", columnList = "cliente_id"),
+                @Index(name = "idx_vehiculos_modelo_id", columnList = "modelo_id")
+        }
+)
+@Getter
+@Setter
+@NoArgsConstructor
+@AllArgsConstructor
+@Builder
+public class Vehiculo {
+
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @EqualsAndHashCode.Include
+    private Integer id;
+
+    @Column(nullable = false, unique = true, length = 20)
+    private String placa;
+
+    @Column(nullable = false)
+    private Integer anio;
+
+    @Column(length = 200)
+    private String caracteristicas;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "modelo_id", nullable = false)
+    private Modelo modelo;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "cliente_id", nullable = false)
+    private Cliente cliente;
+}
+```
