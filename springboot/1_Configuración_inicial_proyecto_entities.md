@@ -225,3 +225,68 @@ public class Vehiculo {
     private Cliente cliente;
 }
 ```
+### 1.3.5 Crear la entidad Empleado de acuerdo al diagrama
+```java
+package com.devsv.autofix_api.entities;
+
+import jakarta.persistence.*;
+import lombok.AllArgsConstructor;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
+import java.io.Serializable;
+
+@AllArgsConstructor
+@NoArgsConstructor
+@Setter
+@Getter
+@Entity
+@Table(name = "empleados", schema = "public", catalog = "autofix_db")
+public class Empleado implements Serializable {
+    private static final long serialVersionUID = 1L;
+
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Integer id;
+
+    @Column(nullable = false, length = 80)
+    private String nombre;
+
+    @Column(length = 80)
+    private String email;
+}
+
+```
+
+### 1.3.6 Crear la entidad Role
+
+```java
+package com.devsv.autofix_api.entities;
+
+import jakarta.persistence.*;
+import lombok.AllArgsConstructor;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
+
+import java.io.Serializable;
+
+@AllArgsConstructor
+@NoArgsConstructor
+@Setter
+@Getter
+@Entity
+@Table(name = "roles", schema = "public", catalog = "autofix_db")
+public class Role implements Serializable {
+    private static final long serialVersionUID = 1L;
+
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Column(name = "id", nullable = false)
+    private Integer id;
+
+    @Column(name = "nombre", nullable = false, length = 50)
+    private String nombre;
+}
+
+```
