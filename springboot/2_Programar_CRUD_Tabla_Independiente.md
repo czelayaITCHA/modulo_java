@@ -143,8 +143,53 @@ public interface MarcaRepository extends JpaRepository<Marca, Integer> {
 }
 ```
 ## 2.5 Crear el mapper para convertir de entity a dto y viseversa
+```java
+package com.devsv.autofix_api.mappers;
+
+import com.devsv.autofix_api.dto.MarcaDTO;
+import com.devsv.autofix_api.entities.Marca;
+import org.mapstruct.Mapper;
+import org.mapstruct.ReportingPolicy;
+
+import java.util.List;
+
+@Mapper(componentModel = "spring", unmappedTargetPolicy = ReportingPolicy.IGNORE)
+public interface MarcaMapper {
+    MarcaDTO toDTO(Marca marca);
+    
+    Marca toEntity(MarcaDTO dto);
+    
+    List<MarcaDTO> toDtoList(List<Marca> entities);
+}
+
+```
 
 ## 2.6 Definir crear interface y definir métodos a implementar para crear las funcionalidades
+```java
+package com.devsv.autofix_api.interfaces;
+
+import com.devsv.autofix_api.dto.MarcaDTO;
+
+import java.util.List;
+
+public interface IMarcaService {
+    //definición del método para obtener todas las marcas
+    List<MarcaDTO> findAll();
+    
+    //método para obtener una Marca por su id
+    MarcaDTO findById(Integer id);
+    
+    //método para guardar/actualizar una marca
+    MarcaDTO save(MarcaDTO dto);
+    
+    //método para eliminar una marca
+    void delete(Integer id);
+}
+```
 ## 2.7 Programar el Service
+```java
+
+```
+
 ## 2.8 Programar el Controller
 ## 2.9 Probar en Postman
