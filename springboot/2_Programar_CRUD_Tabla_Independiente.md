@@ -112,8 +112,37 @@ public class GlobalExceptionHandler {
 }
 ```
 ## 2.3 Crear la clase DTO
+```java
+package com.devsv.autofix_api.dto;
+
+import lombok.Getter;
+import lombok.Setter;
+
+@Getter
+@Setter
+public class MarcaDTO {
+    private Integer id;
+
+    private String nombre;
+}
+
+```
 
 ## 2.4 Crear repository 
+```java
+package com.devsv.autofix_api.repository;
+
+import com.devsv.autofix_api.entities.Marca;
+import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.stereotype.Repository;
+
+@Repository
+public interface MarcaRepository extends JpaRepository<Marca, Integer> {
+    boolean existsByNombre(String nombre);
+    boolean existsByNombreAndIdNot(String nombre, Integer id);
+}
+
+```
 
 ## 2.5 Definir crear interface y definir métodos a implementar para crear las funcionalidades
 ## 2.6 Programar el Service
