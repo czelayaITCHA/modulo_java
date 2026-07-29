@@ -112,6 +112,7 @@ public class GlobalExceptionHandler {
 }
 ```
 ## 2.3 Crear la clase DTO
+
 ```java
 package com.devsv.autofix_api.dto;
 
@@ -125,7 +126,6 @@ public class MarcaDTO {
 
     private String nombre;
 }
-
 ```
 
 ## 2.4 Crear repository 
@@ -141,10 +141,10 @@ public interface MarcaRepository extends JpaRepository<Marca, Integer> {
     boolean existsByNombre(String nombre);
     boolean existsByNombreAndIdNot(String nombre, Integer id);
 }
-
 ```
+## 2.5 Crear el mapper para convertir de entity a dto y viseversa
 
-## 2.5 Definir crear interface y definir métodos a implementar para crear las funcionalidades
-## 2.6 Programar el Service
-## 2.7 Programar el Controller
-## 2.8 Probar en Postman
+## 2.6 Definir crear interface y definir métodos a implementar para crear las funcionalidades
+## 2.7 Programar el Service
+## 2.8 Programar el Controller
+## 2.9 Probar en Postman
