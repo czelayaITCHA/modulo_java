@@ -1,4 +1,4 @@
-# 3. Programar CRUD para una tabla independiente con gestión de imagen
+# 3. Programar CRUD para una tabla con gestión de imagen
 
 En esta guía vamos a desarrollar los componentes para crear un CRUD para la tabla `repuestos_servicios`, entidad **RepuestoServicio** que ya fue creada. A diferencia del CRUD de Marca, este recurso permite adjuntar una imagen: se sube a disco dentro de la carpeta `images` (subcarpeta de `uploads`), y en la tabla **solo se guarda el nombre del archivo**, nunca la ruta completa.
 
@@ -77,6 +77,8 @@ import org.springframework.stereotype.Repository;
 
 @Repository
 public interface RepuestoServicioRepository extends JpaRepository<RepuestoServicio, Integer> {
+    boolean existsByNombre(String nombre);
+    boolean existsByNombreAndIdNot(String nombre, Integer id);
 }
 ```
 
@@ -258,37 +260,50 @@ public class RepuestoServicioService implements IRepuestoServicioService {
     @Override
     @Transactional
     public RepuestoServicioDTO save(RepuestoServicioDTO dto, MultipartFile imagen) {
-        // 1. si trae id, es una actualización: recuperamos la entidad actual
         RepuestoServicio entity;
         String fotoAnterior = null;
 
+        // 1. validamos que no se duplique el nombre (creación)
+        if (dto.getId() == null && repository.existsByNombre(dto.getNombre())) {
+            throw new BadRequestException(
+                    "Ya existe un repuesto/servicio con este nombre: " + dto.getNombre());
+        }
+
         if (dto.getId() != null) {
+            // 2. es una actualización: recuperamos la entidad actual
+            //    (conservamos su foto si no llega una imagen nueva)
             entity = buscarEntidad(dto.getId());
             fotoAnterior = entity.getFoto();
+
+            // 3. validamos que no se duplique el nombre en OTRO registro
+            if (repository.existsByNombreAndIdNot(dto.getNombre(), dto.getId())) {
+                throw new BadRequestException(
+                        "Ya existe otro repuesto/servicio con el nombre: " + dto.getNombre());
+            }
         } else {
             entity = new RepuestoServicio();
         }
 
-        // 2. copiamos los campos del DTO a la entidad a mano
-        //    (no usamos mapper.toEntity aquí: generaría un objeto NUEVO
-        //    y perderíamos el id/foto ya cargados en una actualización)
+        // 4. copiamos los campos del DTO a la entidad a mano (no usamos
+        //    mapper.toEntity aquí: generaría un objeto NUEVO y perderíamos
+        //    el id/foto ya cargados en una actualización)
         entity.setNombre(dto.getNombre());
         entity.setDescripcion(dto.getDescripcion());
         entity.setPrecio(dto.getPrecio());
         entity.setStock(dto.getStock());
         entity.setTipo(dto.getTipo());
 
-        // 3. si llega una imagen nueva, la guardamos y actualizamos el nombre.
+        // 5. si llega una imagen nueva, la guardamos y actualizamos el nombre.
         //    si NO llega, la entidad conserva la foto que ya tenía.
         if (imagen != null && !imagen.isEmpty()) {
             String nuevoNombreArchivo = fileStorageUtil.guardarImagen(imagen);
             entity.setFoto(nuevoNombreArchivo);
         }
 
-        // 4. persistimos
+        // 6. persistimos
         RepuestoServicio guardado = repository.save(entity);
 
-        // 5. si reemplazamos la imagen, borramos el archivo físico anterior
+        // 7. si reemplazamos la imagen, borramos el archivo físico anterior
         if (imagen != null && !imagen.isEmpty() && fotoAnterior != null) {
             fileStorageUtil.eliminarImagen(fotoAnterior);
         }
@@ -327,7 +342,6 @@ public class RepuestoServicioService implements IRepuestoServicioService {
 package com.devsv.autofix_api.controllers;
 
 import com.devsv.autofix_api.dto.RepuestoServicioDTO;
-import com.devsv.autofix_api.enums.TipoItem;
 import com.devsv.autofix_api.interfaces.IRepuestoServicioService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -335,7 +349,6 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
-import java.math.BigDecimal;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -357,26 +370,13 @@ public class RepuestoServicioController {
         return ResponseEntity.ok(repuestoServicioService.findById(id));
     }
 
-    // multipart/form-data: va acompañado del archivo de imagen,
-    // por eso NO puede ser @RequestBody JSON puro como en MarcaController
+    // @RequestPart("dto"): esta parte del multipart trae el objeto completo
+    // en JSON (Content-Type: application/json dentro de esa parte)
     @PostMapping(value = "/repuestos-servicios", consumes = "multipart/form-data")
-    public ResponseEntity<?> create(
-            @RequestParam String nombre,
-            @RequestParam(required = false) String descripcion,
-            @RequestParam BigDecimal precio,
-            @RequestParam Integer stock,
-            @RequestParam TipoItem tipo,
-            @RequestParam(required = false) MultipartFile imagen) {
+    public ResponseEntity<?> create(@RequestPart("dto") RepuestoServicioDTO dto,
+                                    @RequestPart(value = "imagen", required = false) MultipartFile imagen) {
 
         Map<String, Object> response = new HashMap<>();
-
-        RepuestoServicioDTO dto = new RepuestoServicioDTO();
-        dto.setNombre(nombre);
-        dto.setDescripcion(descripcion);
-        dto.setPrecio(precio);
-        dto.setStock(stock);
-        dto.setTipo(tipo);
-
         RepuestoServicioDTO guardado = repuestoServicioService.save(dto, imagen);
 
         response.put("message", "Repuesto/Servicio registrado correctamente...!");
@@ -387,25 +387,13 @@ public class RepuestoServicioController {
 
     // la imagen es opcional en la actualización: si no llega, se conserva la anterior
     @PutMapping(value = "/repuestos-servicios/{id}", consumes = "multipart/form-data")
-    public ResponseEntity<?> update(
-            @PathVariable Integer id,
-            @RequestParam String nombre,
-            @RequestParam(required = false) String descripcion,
-            @RequestParam BigDecimal precio,
-            @RequestParam Integer stock,
-            @RequestParam TipoItem tipo,
-            @RequestParam(required = false) MultipartFile imagen) {
+    public ResponseEntity<?> update(@PathVariable Integer id,
+                                    @RequestPart("dto") RepuestoServicioDTO dto,
+                                    @RequestPart(value = "imagen", required = false) MultipartFile imagen) {
 
         Map<String, Object> response = new HashMap<>();
 
-        RepuestoServicioDTO dto = new RepuestoServicioDTO();
         dto.setId(id);
-        dto.setNombre(nombre);
-        dto.setDescripcion(descripcion);
-        dto.setPrecio(precio);
-        dto.setStock(stock);
-        dto.setTipo(tipo);
-
         RepuestoServicioDTO actualizado = repuestoServicioService.save(dto, imagen);
 
         response.put("message", "Repuesto/Servicio actualizado correctamente");
