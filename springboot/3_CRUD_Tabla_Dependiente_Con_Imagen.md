@@ -205,9 +205,7 @@ public interface IRepuestoServicioService {
     List<RepuestoServicioDTO> findAll();
 
     RepuestoServicioDTO findById(Integer id);
-
-    // recibe la imagen aparte del DTO porque es un archivo binario,
-    // no un campo más que se pueda mandar como JSON
+    
     RepuestoServicioDTO save(RepuestoServicioDTO dto, MultipartFile imagen);
 
     void delete(Integer id);
@@ -430,47 +428,3 @@ public class RepuestoServicioController {
 
 ## 3.10 Probar en Postman
 
-**Crear (POST) — usa el body tipo `form-data`, NO `raw JSON`:**
-
-`POST http://localhost:8080/api/repuestos-servicios`
-
-| Key | Tipo | Valor de ejemplo |
-|---|---|---|
-| `nombre` | Text | Pastillas de freno |
-| `descripcion` | Text | Juego delantero cerámico |
-| `precio` | Text | 45.00 |
-| `stock` | Text | 20 |
-| `tipo` | Text | REPUESTO |
-| `imagen` | **File** | (selecciona un archivo .jpg/.png) |
-
-Respuesta esperada (`201 Created`):
-```json
-{
-  "message": "Repuesto/Servicio registrado correctamente...!",
-  "repuestoServicio": {
-    "id": 1,
-    "nombre": "Pastillas de freno",
-    "descripcion": "Juego delantero cerámico",
-    "precio": 45.00,
-    "stock": 20,
-    "foto": "3f2a1c9e-b4d1-4a2e-9c9a-1a2b3c4d5e6f.jpg",
-    "tipo": "REPUESTO"
-  }
-}
-```
-
-Verifica la imagen abriendo en el navegador: `http://localhost:8080/images/3f2a1c9e-b4d1-4a2e-9c9a-1a2b3c4d5e6f.jpg`
-
-**Actualizar (PUT) sin cambiar la imagen:** repite el `form-data` con los mismos campos de texto, pero deja el campo `imagen` vacío — el `foto` guardado se conserva.
-
-**Eliminar (DELETE) — probar la protección:**
-
-1. Crea una `OrdenTrabajo` con un `DetalleOrden` que use este `repuestoServicio.id`.
-2. Intenta `DELETE http://localhost:8080/api/repuestos-servicios/1`.
-3. Respuesta esperada (`400 Bad Request`):
-```json
-{
-  "message": "No se puede eliminar 'Pastillas de freno' porque ya está registrado en una o más órdenes de trabajo"
-}
-```
-4. Elimina primero el `DetalleOrden`/`OrdenTrabajo` que lo referencia, y repite el `DELETE` — ahora sí debe eliminarse (`200 OK`) y el archivo físico en `uploads/images/` debe desaparecer también.
