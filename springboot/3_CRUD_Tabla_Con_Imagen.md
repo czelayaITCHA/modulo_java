@@ -413,6 +413,28 @@ public class RepuestoServicioController {
     }
 }
 ```
+Si les da error al ejecutar como se me dió a mí en la clase, solo deben hacer esto:
+
+```bash
+.\mvnw.cmd clean compile
+```
+Y luego ejecutar nuevamente el proyecto
 
 ## 3.10 Probar en Postman
-
+* Registrar un repuesto
+  
+  <img width="1575" height="603" alt="image" src="https://github.com/user-attachments/assets/f7c9cefe-547c-4cd3-b528-477ccfc94db0" />
+Contenido del JSON
+```json
+{
+  "nombre": "Pastillas de freno delanteras",
+  "descripcion": "Juego cerámico, compatible con la mayoría de sedanes",
+  "precio": 45.00,
+  "stock": 20,
+  "tipo": "REPUESTO"
+}
+```
+* Resultado
+<img width="1545" height="950" alt="image" src="https://github.com/user-attachments/assets/bf2ab611-7601-4daf-9244-cbc71baac111" />
+  
+* 
