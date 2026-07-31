@@ -188,8 +188,151 @@ public interface IMarcaService {
 ```
 ## 2.7 Programar el Service
 ```java
+package com.devsv.autofix_api.services;
 
+import com.devsv.autofix_api.dto.MarcaDTO;
+import com.devsv.autofix_api.entities.Marca;
+import com.devsv.autofix_api.exceptions.BadRequestException;
+import com.devsv.autofix_api.exceptions.ResourceNotFoundException;
+import com.devsv.autofix_api.interfaces.IMarcaService;
+import com.devsv.autofix_api.mappers.MarcaMapper;
+import com.devsv.autofix_api.repository.MarcaRepository;
+import lombok.RequiredArgsConstructor;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+import java.util.List;
+
+@Service
+@RequiredArgsConstructor
+public class MarcaService implements IMarcaService {
+
+    private final MarcaRepository repository;
+    private final MarcaMapper mapper;
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<MarcaDTO> findAll() {
+        return mapper.toDtoList(repository.findAll());
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public MarcaDTO findById(Integer id) {
+        Marca entity = repository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Marca no encontrada con ID: " + id));
+        return mapper.toDTO(entity);
+    }
+
+    @Override
+    @Transactional
+    public MarcaDTO save(MarcaDTO dto) {
+        //1. validamos que no se duplique el nombre de la marca
+        if(dto.getId() == null && repository.existsByNombre(dto.getNombre())){
+            throw new BadRequestException(
+                 "Ya existe una marca con este nombre: " + dto.getNombre());
+        }
+        // 2. validamos que no se duplique por actualización
+        if(dto.getId() != null){
+            //validamos que el id exista
+            repository.findById(dto.getId())
+                .orElseThrow(() ->
+                        new ResourceNotFoundException("No existe la marca con ID: " + dto.getId()));
+            // validamos que no exista el nombre de la marca en otro registro
+            if(repository.existsByNombreAndIdNot(dto.getNombre(), dto.getId())){
+                throw new BadRequestException("Ya existe otra marca con el nombre: " + dto.getNombre());
+            }
+        }
+        // 3. convertimos el dto en entidad
+        Marca marca = mapper.toEntity(dto);
+        // 4. Persistimos en la tabla y retornamos en forma de DTO
+        return mapper.toDTO(repository.save(marca));
+    }
+
+    @Override
+    public void delete(Integer id) {
+        //1. buscamos la marca en la tabla de la bd
+        Marca entity = repository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException(
+                        "No existe la marca con ID: " + id));
+        repository.delete(entity);
+    }
+}
 ```
 
 ## 2.8 Programar el Controller
+```java
+package com.devsv.autofix_api.controllers;
+
+import com.devsv.autofix_api.dto.MarcaDTO;
+import com.devsv.autofix_api.interfaces.IMarcaService;
+import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.*;
+
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
+@RestController
+@CrossOrigin
+@RequestMapping("/api")
+@RequiredArgsConstructor
+public class MarcaController {
+    private final IMarcaService marcaService;
+
+    //creamos el endpoint para obtener todas las marcas
+    @GetMapping("/marcas")
+    public ResponseEntity<List<MarcaDTO>> getAll(){
+       return ResponseEntity.ok(marcaService.findAll());
+    }
+    //enpoint para obtener una marca
+    @GetMapping("/marcas/{id}")
+    public ResponseEntity<MarcaDTO> getById(@PathVariable Integer id){
+        return ResponseEntity.ok(marcaService.findById(id));
+    }
+
+    //enpoint para crear o registrar una marca
+    @PostMapping("/marcas")
+    public ResponseEntity<?> create(@RequestBody MarcaDTO dto){
+        //creamos un map para estructurar la respuesta
+        Map<String, Object> response = new HashMap<>();
+        //mandamos a persistir en la base de datos
+        MarcaDTO marcaSave = marcaService.save(dto);
+        //construimos la respuesta
+        response.put("message", "Marca registrada correctamente...!");
+        response.put("marca", marcaSave);
+        //retornar la respuesta
+        return new ResponseEntity<>(response, HttpStatus.CREATED);
+    }
+
+    @PutMapping("/marcas/{id}")
+    public ResponseEntity<?> update(@PathVariable Integer id,
+                                    @RequestBody MarcaDTO dto) {
+        Map<String, Object> response = new HashMap<>();
+
+        dto.setId(id);
+        MarcaDTO actualizada = marcaService.save(dto);
+
+        response.put("message", "Marca actualizada correctamente");
+        response.put("marca", actualizada);
+
+        return new ResponseEntity<>(response, HttpStatus.OK);
+    }
+
+    @DeleteMapping("/marcas/{id}")
+    public ResponseEntity<?> delete(@PathVariable Integer id) {
+        marcaService.delete(id);
+
+        Map<String, Object> response = new HashMap<>();
+        response.put("message", "Marca eliminada con éxito");
+
+        return new ResponseEntity<>(response, HttpStatus.OK);
+    }
+
+}
+
+```
+
 ## 2.9 Probar en Postman
