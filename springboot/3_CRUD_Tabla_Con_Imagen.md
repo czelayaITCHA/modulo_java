@@ -437,4 +437,11 @@ Contenido del JSON
 * Resultado
 <img width="1545" height="950" alt="image" src="https://github.com/user-attachments/assets/bf2ab611-7601-4daf-9244-cbc71baac111" />
   
-* 
+* Registrar un servicio, este no lleva imagen y el stock se define a 0
+
+<img width="1569" height="714" alt="image" src="https://github.com/user-attachments/assets/a6f7f44b-8c4d-49ac-a2d6-9b81d70105d3" />
+
+* Obtener los registros guardados
+  <img width="1577" height="844" alt="image" src="https://github.com/user-attachments/assets/ecb9dcd3-41c1-4c94-91f0-74bb34849ce8" />
+
+* Probar los demás endpoints
