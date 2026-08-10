@@ -94,3 +94,29 @@ public interface VehiculoRepository extends JpaRepository<Vehiculo, Integer> {
     boolean existsByModeloId(Integer modeloId);
 }
 ```
+## 4.4 Crear interface y definir métodos a implementar para crear las funcionalidades
+
+```java
+package com.devsv.autofix_api.interfaces;
+
+import com.devsv.autofix_api.dto.ModeloDTO;
+
+import java.util.List;
+
+public interface IModeloService {
+    //definición del método para obtener todos los modelos
+    List<ModeloDTO> findAll();
+
+    //método para obtener un Modelo por su id
+    ModeloDTO findById(Integer id);
+
+    //método para listar los modelos de una marca específica
+    List<ModeloDTO> findByMarcaId(Integer marcaId);
+
+    //método para guardar/actualizar un modelo
+    ModeloDTO save(ModeloDTO dto);
+
+    //método para eliminar un modelo
+    void delete(Integer id);
+}
+```
