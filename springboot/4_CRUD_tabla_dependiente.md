@@ -54,3 +54,43 @@ public interface ModeloMapper {
     List<ModeloDTO> toDtoList(List<Modelo> entities);
 }
 ```
+## 4.3 Crear los repository
+
+Necesitamos dos: el propio de `Modelo`, y uno mínimo de `Vehiculo` para poder bloquear la eliminación de un modelo que ya esté asignado a algún vehículo.
+
+```java
+package com.devsv.autofix_api.repository;
+
+import com.devsv.autofix_api.entities.Modelo;
+import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.stereotype.Repository;
+
+import java.util.List;
+
+@Repository
+public interface ModeloRepository extends JpaRepository<Modelo, Integer> {
+    // El nombre se valida ÚNICO DE FORMA GLOBAL, sin importar la marca -
+    // dos marcas distintas NO pueden tener un modelo con el mismo nombre.
+    boolean existsByNombre(String nombre);
+    boolean existsByNombreAndIdNot(String nombre, Integer id);
+
+    // Para el <select> dependiente en el frontend: al elegir una marca,
+    // se cargan solo los modelos de esa marca (ej. GET /api/modelos?marcaId=1)
+    List<Modelo> findByMarcaId(Integer marcaId);
+}
+```
+
+```java
+package com.devsv.autofix_api.repository;
+
+import com.devsv.autofix_api.entities.Vehiculo;
+import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.stereotype.Repository;
+
+@Repository
+public interface VehiculoRepository extends JpaRepository<Vehiculo, Integer> {
+    // Se usa para bloquear la eliminación de un Modelo que ya está
+    // asignado a algún vehículo registrado.
+    boolean existsByModeloId(Integer modeloId);
+}
+```
