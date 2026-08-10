@@ -69,8 +69,6 @@ import java.util.List;
 
 @Repository
 public interface ModeloRepository extends JpaRepository<Modelo, Integer> {
-    // El nombre se valida ÚNICO DE FORMA GLOBAL, sin importar la marca -
-    // dos marcas distintas NO pueden tener un modelo con el mismo nombre.
     boolean existsByNombre(String nombre);
     boolean existsByNombreAndIdNot(String nombre, Integer id);
 
@@ -150,7 +148,6 @@ En la clase **GlobalExceptionHandler**, adicionar este método:
         return new ResponseEntity<>(response, HttpStatus.CONFLICT);
     }
 ```
-
 
 ## 4.6 Programar el Service
 
@@ -262,7 +259,7 @@ public class ModeloService implements IModeloService {
 
 ## 4.7 Programar el Controller
 
-Sin imagen de por medio, `Modelo` vuelve a ser JSON normal — mismo patrón que `MarcaController`, con el agregado del filtro opcional por marca.
+`Modelo` vuelve a ser JSON normal — mismo patrón que `MarcaController`, con el agregado del filtro opcional por marca.
 
 ```java
 package com.devsv.autofix_api.controllers;
