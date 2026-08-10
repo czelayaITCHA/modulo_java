@@ -130,7 +130,7 @@ import org.springframework.web.bind.annotation.ResponseStatus;
 
 @ResponseStatus(value = HttpStatus.CONFLICT)
 public class ConflictException extends RuntimeException{
-    private static final long serialversionUID = 1L;
+    private static final long serialVersionUID = 1L;
 
     public ConflictException(String message) {
         super(message);
@@ -423,7 +423,7 @@ Repite el JSON del punto 5 → `400 Bad Request`:
 **7. Crear — `marcaId` inexistente**
 
 ```json
-{ "nombre": "Sentra", "marcaId": 999 }
+{ "nombre": "Rouge", "marcaId": 999 }
 ```
 → `404 Not Found`:
 ```json
@@ -433,7 +433,7 @@ Repite el JSON del punto 5 → `400 Bad Request`:
 **9. Crear — sin `marcaId`**
 
 ```json
-{ "nombre": "Sentra" }
+{ "nombre": "Rouge" }
 ```
 → `400 Bad Request`:
 ```json
