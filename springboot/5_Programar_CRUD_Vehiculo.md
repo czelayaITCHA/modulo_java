@@ -363,7 +363,7 @@ public class VehiculoController {
         Map<String, Object> response = new HashMap<>();
 
         dto.setId(id);
-        VehiculoDTO actualizado = vehiculoService.save(dto);
+        VehiculoDTO actualizado = vehiculoService.saveOrUpdate(dto);
 
         response.put("message", "Vehículo actualizado correctamente");
         response.put("vehiculo", actualizado);
