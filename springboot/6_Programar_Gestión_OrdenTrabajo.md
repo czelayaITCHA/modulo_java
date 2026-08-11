@@ -142,7 +142,7 @@ public class OrdenTrabajoDTO {
     private EmpleadoDTO mecanico;
 
     // Se envía completo tanto al crear como al actualizar
-    private List<DetalleOrdenDTO> detalles;
+    private List<DetalleOrdenDTO> detalleOrden;
 }
 ```
 
@@ -159,17 +159,17 @@ import org.mapstruct.ReportingPolicy;
 
 import java.util.List;
 
-@Mapper(componentModel = "spring", uses = {VehiculoMapper.class, EmpleadoMapper.class, DetalleOrdenMapper.class},
+@Mapper(componentModel = "spring", uses = {VehiculoMapper.class,
+        EmpleadoMapper.class, DetalleOrdenMapper.class},
         unmappedTargetPolicy = ReportingPolicy.IGNORE)
 public interface OrdenTrabajoMapper {
 
     @Mapping(target = "vehiculoId", source = "vehiculo.id")
     @Mapping(target = "mecanicoId", source = "mecanico.id")
-    @Mapping(target = "detalles", source = "detalleOrden")
+    @Mapping(target = "detalleOrden", source = "detalleOrden")
     OrdenTrabajoDTO toDTO(OrdenTrabajo entity);
 
     List<OrdenTrabajoDTO> toDtoList(List<OrdenTrabajo> entities);
-
 }
 ```
 
