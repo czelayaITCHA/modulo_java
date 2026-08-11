@@ -222,5 +222,273 @@ public interface IOrdenTrabajoService {
 ## 6.8 Programar el Service (el corazón del módulo)
 
 ```java
+package com.devsv.autofix_api.services;
 
+import com.devsv.autofix_api.dto.DetalleOrdenDTO;
+import com.devsv.autofix_api.dto.OrdenTrabajoDTO;
+import com.devsv.autofix_api.entities.*;
+import com.devsv.autofix_api.enums.EstadoOrden;
+import com.devsv.autofix_api.enums.TipoItem;
+import com.devsv.autofix_api.exceptions.BadRequestException;
+import com.devsv.autofix_api.exceptions.ConflictException;
+import com.devsv.autofix_api.exceptions.ResourceNotFoundException;
+import com.devsv.autofix_api.interfaces.IOrdenTrabajoService;
+import com.devsv.autofix_api.mappers.OrdenTrabajoMapper;
+import com.devsv.autofix_api.repository.EmpleadoRepository;
+import com.devsv.autofix_api.repository.OrdenTrabajoRepository;
+import com.devsv.autofix_api.repository.RepuestoServicioRepository;
+import com.devsv.autofix_api.repository.VehiculoRepository;
+import lombok.RequiredArgsConstructor;
+import org.springframework.orm.ObjectOptimisticLockingFailureException;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+import java.math.BigDecimal;
+import java.time.LocalDate;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+
+@Service
+@RequiredArgsConstructor
+public class OrdenTrabajoService implements IOrdenTrabajoService {
+
+    private final OrdenTrabajoRepository repository;
+    private final VehiculoRepository vehiculoRepository;
+    private final EmpleadoRepository empleadoRepository;
+    private final RepuestoServicioRepository repuestoServicioRepository;
+    private final OrdenTrabajoMapper mapper;
+
+    // Estados a los que se puede pasar desde cada estado actual.
+    // ENTREGADA y CANCELADA son estados finales - de ahí no se puede transicionar a nada.
+    private static final Map<EstadoOrden, Set<EstadoOrden>> TRANSICIONES_VALIDAS = Map.of(
+            EstadoOrden.PENDIENTE, Set.of(EstadoOrden.EN_PROCESO, EstadoOrden.CANCELADA),
+            EstadoOrden.EN_PROCESO, Set.of(EstadoOrden.COMPLETADA, EstadoOrden.CANCELADA),
+            EstadoOrden.COMPLETADA, Set.of(EstadoOrden.ENTREGADA),
+            EstadoOrden.ENTREGADA, Set.of(),
+            EstadoOrden.CANCELADA, Set.of()
+    );
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<OrdenTrabajoDTO> findAll() {
+        return mapper.toDtoList(repository.findAll());
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public OrdenTrabajoDTO findById(Long id) {
+        return mapper.toDTO(buscarEntidad(id));
+    }
+
+    @Override
+    @Transactional
+    public OrdenTrabajoDTO create(OrdenTrabajoDTO dto) {
+        // 1. validamos vehículo (obligatorio) y mecánico (opcional)
+        Vehiculo vehiculo = buscarVehiculo(dto.getVehiculoId());
+        Empleado mecanico = dto.getMecanicoId() != null ? buscarMecanico(dto.getMecanicoId()) : null;
+
+        // 2. armamos el maestro - el número de orden se genera con el método privado generarNumeroOrden()
+        OrdenTrabajo orden = new OrdenTrabajo();
+        orden.setNumero(generarNumeroOrden());
+        orden.setFecha(dto.getFecha() != null ? dto.getFecha() : LocalDate.now());
+        orden.setEstado(EstadoOrden.PENDIENTE); // toda orden nueva inicia PENDIENTE, sin importar lo que venga en el DTO
+        orden.setObservaciones(dto.getObservaciones());
+        orden.setVehiculo(vehiculo);
+        orden.setMecanico(mecanico);
+        orden.setDetalleOrden(new ArrayList<>());
+
+        // 3. procesamos los detalles: valida stock, descuenta, calcula precios y total.
+
+        BigDecimal total = procesarDetalles(orden, dto.getDetalleOrden());
+        orden.setTotal(total);
+
+        OrdenTrabajo guardada = repository.save(orden);
+        return mapper.toDTO(guardada);
+    }
+
+    @Override
+    @Transactional
+    public OrdenTrabajoDTO update(Long id, OrdenTrabajoDTO dto) {
+        OrdenTrabajo orden = buscarEntidad(id);
+
+        Vehiculo vehiculo = buscarVehiculo(dto.getVehiculoId());
+        Empleado mecanico = dto.getMecanicoId() != null ? buscarMecanico(dto.getMecanicoId()) : null;
+
+        // 1. devolvemos al inventario el stock reservado por los detalles ACTUALES
+        revertirStock(orden);
+
+        // 2. limpiamos la lista - orphanRemoval=true hace que Hibernate borre
+        //    esos detalles viejos de la tabla al guardar
+        orden.getDetalleOrden().clear();
+
+        // 3. reconstruimos con los detalles nuevos (vuelve a validar y descontar stock).
+
+        BigDecimal total = procesarDetalles(orden, dto.getDetalleOrden());
+
+        orden.setFecha(dto.getFecha() != null ? dto.getFecha() : orden.getFecha());
+        orden.setObservaciones(dto.getObservaciones());
+        orden.setVehiculo(vehiculo);
+        orden.setMecanico(mecanico);
+        orden.setTotal(total);
+        // "numero" y "estado" NO se tocan aquí a propósito, numero es inmutable, estado se cambia en changeState
+
+        try {
+            OrdenTrabajo actualizada = repository.save(orden);
+            return mapper.toDTO(actualizada);
+        } catch (ObjectOptimisticLockingFailureException e) {
+            // @Version en la entidad: si otro usuario guardó esta misma orden
+            // mientras la editabas, Hibernate lo detecta y lanza esta excepción
+            throw new ConflictException(
+                    "La orden fue modificada por otro usuario mientras la editabas; recarga e intenta de nuevo");
+        }
+    }
+
+    @Override
+    @Transactional
+    public OrdenTrabajoDTO changeState(Long id, EstadoOrden newState) {
+        OrdenTrabajo orden = buscarEntidad(id);
+
+        Set<EstadoOrden> permitidos = TRANSICIONES_VALIDAS.get(orden.getEstado());
+        if (permitidos == null || !permitidos.contains(newState)) {
+            throw new BadRequestException(
+                    "No se puede cambiar el estado de '" + orden.getEstado() + "' a '" + newState + "'");
+        }
+
+        // Si se cancela la orden, el stock reservado por sus repuestos se devuelve al inventario.
+        if (newState == EstadoOrden.CANCELADA) {
+            revertirStock(orden);
+        }
+
+        orden.setEstado(newState);
+
+        try {
+            return mapper.toDTO(repository.save(orden));
+        } catch (ObjectOptimisticLockingFailureException e) {
+            throw new ConflictException("La orden fue modificada por otro usuario; recarga e intenta de nuevo");
+        }
+    }
+
+    @Override
+    @Transactional
+    public void delete(Long id) {
+        OrdenTrabajo orden = buscarEntidad(id);
+
+        // Solo se puede eliminar una orden que todavía no ha iniciado trabajo real.
+        if (orden.getEstado() != EstadoOrden.PENDIENTE) {
+            throw new ConflictException(
+                    "Solo se pueden eliminar órdenes en estado PENDIENTE (estado actual: " + orden.getEstado() + ")");
+        }
+
+        // se devuelve el stock reservado antes de eliminar la orden
+        revertirStock(orden);
+
+        repository.delete(orden); // cascade + orphanRemoval eliminan los detalles automáticamente
+    }
+
+    // Métodos auxiliares
+
+    /*
+     * Valida y construye cada DetalleOrden a partir del DTO, descontando
+     * stock cuando corresponde, y devuelve el total acumulado (suma de subtotales).
+     * Lanza excepción ante el primer detalle inválido - eso corta toda la
+     * transacción y revierte cualquier descuento de stock ya aplicado en este mismo método.
+     */
+    private BigDecimal procesarDetalles(OrdenTrabajo orden, List<DetalleOrdenDTO> detallesDto) {
+        if (detallesDto == null || detallesDto.isEmpty()) {
+            throw new BadRequestException("La orden debe tener al menos un detalle (repuesto o servicio)");
+        }
+
+        BigDecimal total = BigDecimal.ZERO;
+
+        for (DetalleOrdenDTO detalleDto : detallesDto) {
+            if (detalleDto.getRepuestoServicioId() == null) {
+                throw new BadRequestException("Cada detalle debe indicar el repuesto/servicio");
+            }
+            if (detalleDto.getCantidad() == null || detalleDto.getCantidad() <= 0) {
+                throw new BadRequestException("La cantidad de cada detalle debe ser mayor a cero");
+            }
+
+            RepuestoServicio repuestoServicio = repuestoServicioRepository.findById(detalleDto.getRepuestoServicioId())
+                    .orElseThrow(() -> new ResourceNotFoundException(
+                            "No existe el repuesto/servicio con ID: " + detalleDto.getRepuestoServicioId()));
+
+            // El control de stock solo aplica a REPUESTOS - un SERVICIO no se "agota"
+            if (repuestoServicio.getTipo() == TipoItem.REPUESTO) {
+                if (repuestoServicio.getStock() < detalleDto.getCantidad()) {
+                    throw new ConflictException(
+                            "Stock insuficiente para '" + repuestoServicio.getNombre() + "': disponible " +
+                                    repuestoServicio.getStock() + ", solicitado " + detalleDto.getCantidad());
+                }
+                repuestoServicio.setStock(repuestoServicio.getStock() - detalleDto.getCantidad());
+                repuestoServicioRepository.save(repuestoServicio);
+            }
+
+            // El precio se toma del RepuestoServicio,
+            BigDecimal precioUnitario = repuestoServicio.getPrecio();
+            BigDecimal subtotal = precioUnitario.multiply(BigDecimal.valueOf(detalleDto.getCantidad()));
+
+            DetalleOrden detalle = new DetalleOrden();
+            detalle.setCantidad(detalleDto.getCantidad());
+            detalle.setPrecioUnitario(precioUnitario);
+            detalle.setSubtotal(subtotal);
+            detalle.setRepuestoServicio(repuestoServicio);
+            detalle.setOrdenTrabajo(orden); // lado dueño de la relación bidireccional
+
+            orden.getDetalleOrden().add(detalle);
+            total = total.add(subtotal);
+        }
+
+        return total;
+    }
+
+    /* Devuelve al inventario el stock reservado por cada detalle de tipo REPUESTO. */
+    private void revertirStock(OrdenTrabajo orden) {
+        for (DetalleOrden detalle : orden.getDetalleOrden()) {
+            RepuestoServicio repuestoServicio = detalle.getRepuestoServicio();
+            if (repuestoServicio.getTipo() == TipoItem.REPUESTO) {
+                repuestoServicio.setStock(repuestoServicio.getStock() + detalle.getCantidad());
+                repuestoServicioRepository.save(repuestoServicio);
+            }
+        }
+    }
+
+    /* Método para generar el número de orden con formato AAAA + MM + NNNN (10 caracteres) */
+
+    private String generarNumeroOrden() {
+        LocalDate hoy = LocalDate.now();
+        String prefijo = String.format("%04d%02d", hoy.getYear(), hoy.getMonthValue());
+
+        int siguienteCorrelativo = repository.findFirstByNumeroStartingWithOrderByNumeroDesc(prefijo)
+                .map(ultimaOrden -> Integer.parseInt(ultimaOrden.getNumero().substring(6)) + 1)
+                .orElse(1);
+
+        if (siguienteCorrelativo > 9999) {
+            throw new BadRequestException(
+                    "Se alcanzó el máximo de órdenes de trabajo para " + prefijo + " (9999)");
+        }
+
+        return prefijo + String.format("%04d", siguienteCorrelativo);
+    }
+
+    private OrdenTrabajo buscarEntidad(Long id) {
+        return repository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("No existe la orden de trabajo con ID: " + id));
+    }
+
+    private Vehiculo buscarVehiculo(Integer vehiculoId) {
+        if (vehiculoId == null) {
+            throw new BadRequestException("Debe indicar el vehículo de la orden");
+        }
+        return vehiculoRepository.findById(vehiculoId)
+                .orElseThrow(() -> new ResourceNotFoundException("No existe el vehículo con ID: " + vehiculoId));
+    }
+
+    private Empleado buscarMecanico(Integer mecanicoId) {
+        return empleadoRepository.findById(mecanicoId)
+                .orElseThrow(() -> new ResourceNotFoundException("No existe el empleado con ID: " + mecanicoId));
+    }
+
+}
 ```
