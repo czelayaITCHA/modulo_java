@@ -112,7 +112,7 @@ public interface IModeloService {
     List<ModeloDTO> findByMarcaId(Integer marcaId);
 
     //método para guardar/actualizar un modelo
-    ModeloDTO save(ModeloDTO dto);
+    ModeloDTO saveOrUpdate(ModeloDTO dto);
 
     //método para eliminar un modelo
     void delete(Integer id);
@@ -302,7 +302,7 @@ public class ModeloController {
     public ResponseEntity<?> create(@RequestBody ModeloDTO dto) {
         Map<String, Object> response = new HashMap<>();
 
-        ModeloDTO guardado = modeloService.save(dto);
+        ModeloDTO guardado = modeloService.saveOrUpdate(dto);
 
         response.put("message", "Modelo registrado correctamente...!");
         response.put("modelo", guardado);
@@ -315,7 +315,7 @@ public class ModeloController {
         Map<String, Object> response = new HashMap<>();
 
         dto.setId(id);
-        ModeloDTO actualizado = modeloService.save(dto);
+        ModeloDTO actualizado = modeloService.saveOrUpdate(dto);
 
         response.put("message", "Modelo actualizado correctamente");
         response.put("modelo", actualizado);
