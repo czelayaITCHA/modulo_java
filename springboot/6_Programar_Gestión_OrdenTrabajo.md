@@ -184,6 +184,10 @@ import com.devsv.autofix_api.entities.OrdenTrabajo;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
+import java.time.LocalDate;
+import java.util.List;
+import java.util.Optional;
+
 @Repository
 public interface OrdenTrabajoRepository extends JpaRepository<OrdenTrabajo, Long> {
     boolean existsByVehiculoId(Integer vehiculoId);
@@ -191,10 +195,13 @@ public interface OrdenTrabajoRepository extends JpaRepository<OrdenTrabajo, Long
     boolean existsByNumero(String numero);
     boolean existsByNumeroAndIdNot(String numero, Long id);
 
+    Optional<OrdenTrabajo> findFirstByNumeroStartingWithOrderByNumeroDesc(String prefijo);
+
     //métodos para obtener listado de ordenes por rango de fechas
     List<OrdenTrabajo> findByFechaBetween(LocalDate fechaIncio, LocalDate FechaFin);
     //Obtener las órdenes por una fecha específica
     List<OrdenTrabajo> findByFecha(LocalDate fecha);
+
 }
 ```
 
