@@ -526,6 +526,7 @@ public class OrdenTrabajoService implements IOrdenTrabajoService {
 }
 ```
 ## 6.9 Programar el Controller
+
 ```java
 package com.devsv.autofix_api.controllers;
 
