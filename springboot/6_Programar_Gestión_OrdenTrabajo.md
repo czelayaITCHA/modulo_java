@@ -526,3 +526,107 @@ public class OrdenTrabajoService implements IOrdenTrabajoService {
 }
 ```
 ## 6.9 Programar el Controller
+```java
+package com.devsv.autofix_api.controllers;
+
+import com.devsv.autofix_api.dto.OrdenTrabajoDTO;
+import com.devsv.autofix_api.enums.EstadoOrden;
+import com.devsv.autofix_api.exceptions.BadRequestException;
+import com.devsv.autofix_api.interfaces.IOrdenTrabajoService;
+import lombok.RequiredArgsConstructor;
+import org.springframework.format.annotation.DateTimeFormat;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.*;
+
+import java.time.LocalDate;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
+@RestController
+@CrossOrigin
+@RequestMapping("/api")
+@RequiredArgsConstructor
+public class OrdenTrabajoController {
+    private final IOrdenTrabajoService ordenTrabajoService;
+
+    @GetMapping("/ordenes-trabajo")
+    public ResponseEntity<List<OrdenTrabajoDTO>> getAll(
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate fecha,
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate fechaInicio,
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate fechaFin
+    ){
+        return ResponseEntity.ok(ordenTrabajoService.findAll(fecha,fechaInicio,fechaFin));
+    }
+
+    @GetMapping("/ordenes-trabajo/{id}")
+    public ResponseEntity<OrdenTrabajoDTO> getById(@PathVariable Long id){
+        return ResponseEntity.ok(ordenTrabajoService.findById(id));
+    }
+
+    @PostMapping("/ordenes-trabajo")
+    public ResponseEntity<?> create(@RequestBody OrdenTrabajoDTO dto){
+        Map<String, Object> response = new HashMap<>();
+        OrdenTrabajoDTO ordenCreated = ordenTrabajoService.create(dto);
+        response.put("message", "Orden de trabajo registrada correctamente...!");
+        response.put("ordenTrabajo", ordenCreated);
+
+        return new ResponseEntity<>(response, HttpStatus.CREATED);
+    }
+
+    //endpoint para actualizar la orden y reemplazar su lista de detalles
+    @PutMapping("/ordenes-trabajo/{id}")
+    public ResponseEntity<?> update(@PathVariable Long id, @RequestBody OrdenTrabajoDTO dto) {
+        Map<String, Object> response = new HashMap<>();
+
+        OrdenTrabajoDTO actualizada = ordenTrabajoService.update(id, dto);
+
+        response.put("message", "Orden de trabajo actualizada correctamente");
+        response.put("ordenTrabajo", actualizada);
+
+        return new ResponseEntity<>(response, HttpStatus.OK);
+    }
+
+    //endpoint dedicado para transiciones de estado (PENDIENTE -> EN_PROCESO -> ...)
+    @PatchMapping("/ordenes-trabajo/{id}/estado")
+    public ResponseEntity<?> cambiarEstado(@PathVariable Long id, @RequestBody Map<String, String> body) {
+        Map<String, Object> response = new HashMap<>();
+
+        EstadoOrden nuevoEstado;
+        try {
+            nuevoEstado = EstadoOrden.valueOf(body.get("estado"));
+        } catch (IllegalArgumentException | NullPointerException e) {
+            throw new BadRequestException(
+                    "Estado inválido. Valores permitidos: PENDIENTE, EN_PROCESO, COMPLETADA, ENTREGADA, CANCELADA");
+        }
+
+        OrdenTrabajoDTO actualizada = ordenTrabajoService.changeState(id, nuevoEstado);
+
+        response.put("message", "Estado actualizado a " + nuevoEstado);
+        response.put("ordenTrabajo", actualizada);
+
+        return new ResponseEntity<>(response, HttpStatus.OK);
+    }
+
+    @DeleteMapping("/ordenes-trabajo/{id}")
+    public ResponseEntity<?> delete(@PathVariable Long id) {
+        ordenTrabajoService.delete(id);
+
+        Map<String, Object> response = new HashMap<>();
+        response.put("message", "Orden de trabajo eliminada con éxito");
+
+        return new ResponseEntity<>(response, HttpStatus.OK);
+    }
+
+}
+```
+## 6.10 Probar en Postman
+
+### 1. Registrar una orden de trabajo
+<img width="1934" height="1000" alt="image" src="https://github.com/user-attachments/assets/27e79d80-70a1-400c-a753-14aefdf93269" />
+
+### 2. Forzar fallo por stock insuficiente de algún repuesto
+<img width="1023" height="648" alt="image" src="https://github.com/user-attachments/assets/aef3cfda-4274-4923-a10d-208c6488a08c" />
+
+
