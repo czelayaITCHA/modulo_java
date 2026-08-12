@@ -190,6 +190,11 @@ public interface OrdenTrabajoRepository extends JpaRepository<OrdenTrabajo, Long
 
     boolean existsByNumero(String numero);
     boolean existsByNumeroAndIdNot(String numero, Long id);
+
+    //métodos para obtener listado de ordenes por rango de fechas
+    List<OrdenTrabajo> findByFechaBetween(LocalDate fechaIncio, LocalDate FechaFin);
+    //Obtener las órdenes por una fecha específica
+    List<OrdenTrabajo> findByFecha(LocalDate fecha);
 }
 ```
 
@@ -204,7 +209,8 @@ import com.devsv.autofix_api.enums.EstadoOrden;
 import java.util.List;
 
 public interface IOrdenTrabajoService {
-    List<OrdenTrabajoDTO> findAll();
+    List<OrdenTrabajoDTO> findAll(LocalDate fecha,
+                                  LocalDate fechaInicio, LocalDate fechaFin);
 
     OrdenTrabajoDTO findById(Long id);
 
@@ -272,7 +278,27 @@ public class OrdenTrabajoService implements IOrdenTrabajoService {
 
     @Override
     @Transactional(readOnly = true)
-    public List<OrdenTrabajoDTO> findAll() {
+    public List<OrdenTrabajoDTO> findAll(LocalDate fecha,
+                                         LocalDate fechaInicio, LocalDate fechaFin) {
+        boolean tieneFechaExacta = fecha != null;
+        boolean tieneRango = fechaInicio != null || fechaFin != null;
+        //evaluamos que sean ambos casos
+        if(tieneFechaExacta && tieneRango){
+            throw new BadRequestException("Use 'fecha' para obtener órdenes de un día específico, o " +
+                    "'fechaInicio' y 'fechaFin' para un rango - no ambas al mismo tiempo");
+        }
+        if(tieneFechaExacta){
+            return mapper.toDtoList(repository.findByFecha(fecha));
+        }
+        if(tieneFechaExacta){
+            if(fechaInicio == null || fechaFin == null){
+                throw new BadRequestException("Debe especificar un rango de fechas");
+            }
+            if(fechaInicio.isAfter(fechaFin)){
+                throw new BadRequestException("La fecha de inicio no puede ser mayor a la fecha final");
+            }
+            return mapper.toDtoList(repository.findByFechaBetween(fechaInicio, fechaFin));
+        }
         return mapper.toDtoList(repository.findAll());
     }
 
