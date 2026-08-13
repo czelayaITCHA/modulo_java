@@ -110,7 +110,7 @@ public interface RoleRepository extends JpaRepository<Role, Integer> {
 }
 ```
 
-## 7.2 Nueva excepción: acceso a un recurso que no autorizado (403)
+## 7.2 Nueva excepción: acceso a un recurso no autorizado (403)
 
 ```java
 package com.devsv.autofix_api.exceptions;
