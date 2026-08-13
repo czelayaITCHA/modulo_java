@@ -297,7 +297,7 @@ public class OrdenTrabajoService implements IOrdenTrabajoService {
         if(tieneFechaExacta){
             return mapper.toDtoList(repository.findByFecha(fecha));
         }
-        if(tieneFechaExacta){
+        if(tieneRango){
             if(fechaInicio == null || fechaFin == null){
                 throw new BadRequestException("Debe especificar un rango de fechas");
             }
