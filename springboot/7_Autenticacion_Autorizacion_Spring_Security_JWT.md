@@ -432,7 +432,8 @@ public class JwtAuthenticationEntryPoint implements AuthenticationEntryPoint {
         response.setContentType("application/json;charset=UTF-8");
         response.getWriter().write("{\"message\":\"" + mensaje + "\"}");
     }
-}```
+}
+```
 
 ```java
 package com.devsv.autofix_api.security;
