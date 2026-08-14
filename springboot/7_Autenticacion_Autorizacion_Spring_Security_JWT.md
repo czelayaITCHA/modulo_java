@@ -87,8 +87,7 @@ import java.util.Optional;
 
 @Repository
 public interface UsuarioRoleRepository extends JpaRepository<UsuarioRole, Integer> {
-    // Un usuario -> un solo rol (regla de negocio confirmada), por eso
-    // Optional en vez de List - findByUsuarioId nunca debería traer más de uno.
+    //Un usuario -> un role
     Optional<UsuarioRole> findByUsuarioId(Integer usuarioId);
 
     boolean existsByUsuarioId(Integer usuarioId);
