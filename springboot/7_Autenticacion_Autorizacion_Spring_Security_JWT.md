@@ -990,6 +990,27 @@ VALUES(
 
 ## 7.15 Probar en Postman
 
+**1. Hacer login con el usuario admin**
+`POST http://localhost:8080/api/auth/login`
+```json
+{
+  "username": "admin",
+  "password": "admin123"
+}
+```
+Respuesta (`200 Ok`):
+```json
+{
+    "auth": {
+        "token": "eyJhbGciOiJIUzUxMiJ9.eyJzdWIiOiJhZG1pbiIsIm5vbWJyZSI6IkFkbWluaXN0cmFkb3IgZGVsIFNpc3RlbWEiLCJ0aXBvIjoiRU1QTEVBRE8iLCJlbXBsZWFkb0lkIjoyLCJyb2wiOiJBRE1JTiIsImlhdCI6MTc4Njk5MTM4MSwiZXhwIjoxNzg3MDA1NzgxfQ.ogoZbefvtC6E1ckAPlRL220ZKa3M-ox9iPSesWvXJXzesbGUwNmjheoo6fkficMWteKhWkbPscrdW4KAp3kLKw",
+        "username": "admin",
+        "nombre": "Administrador del Sistema",
+        "tipo": "EMPLEADO",
+        "role": "ADMIN"
+    },
+    "message": "Inicio de sesión exitoso"
+}
+
 **1. Registro de un cliente**
 
 `POST http://localhost:8080/api/auth/register`
