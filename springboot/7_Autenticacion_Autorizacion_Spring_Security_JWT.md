@@ -48,7 +48,7 @@ Genera un secreto real así:
 ```bash
 openssl rand -base64 48
 ```
-
+Copiar el hash generado como valor de la propiedad **app.jwt.secret** del archivo application.properties
 ### Datos - la tabla `roles` debe tener sus 4 filas antes de probar
 
 ```sql
@@ -327,7 +327,7 @@ public record AuthenticatedUser(
         String tipo,
         Integer empleadoId,
         Integer clienteId,
-        String role
+        String rol
 ) {
 }
 ```
@@ -385,11 +385,11 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                     claims.get("tipo", String.class),
                     claims.get("empleadoId", Integer.class),
                     claims.get("clienteId", Integer.class),
-                    claims.get("role", String.class)
+                    claims.get("rol", String.class)
             );
 
             List<GrantedAuthority> authorities =
-                    List.of(new SimpleGrantedAuthority("ROLE_" + usuarioAutenticado.role()));
+                    List.of(new SimpleGrantedAuthority("ROLE_" + usuarioAutenticado.rol()));
 
             var authentication = new UsernamePasswordAuthenticationToken(usuarioAutenticado, null, authorities);
             authentication.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
