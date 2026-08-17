@@ -943,7 +943,52 @@ El mismo patrón aplica al resto de tus Controllers: `@PreAuthorize` para "¿tie
 | `VehiculoController` | *(ya está definido, en este punto)* | `ADMIN`, `RECEPCIONISTA` | `ADMIN`, `RECEPCIONISTA` | — | `ADMIN` |
 | `OrdenTrabajoController` | sin restricción | `ADMIN`, `RECEPCIONISTA` | `ADMIN`, `RECEPCIONISTA` | `ADMIN`, `RECEPCIONISTA`, `MECANICO` | `ADMIN` |
 
-## 7.14 Probar en Postman
+## 7.14 Registrar el primer ADMIN del sistema
+### 7.14.1 Crear una clase de prueba para generar el Hash que se asignará al campo password
+En el package test, package principal **autofix_api**, crear la siguiente clase:
+
+```java
+package com.devsv.autofix_api;
+
+import org.junit.jupiter.api.Test;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+
+public class GenerarHashTest {
+
+    @Test
+    void generarHash(){
+        String passwordPlano = "admin123";
+        String hash = new BCryptPasswordEncoder().encode(passwordPlano);
+        System.out.println("Hash generado: " + hash);
+
+        boolean coincide = new BCryptPasswordEncoder().matches(passwordPlano, hash);
+        System.out.println("Coincide? " +coincide);
+    }
+}
+```
+Corre la clase de prueba en el ícono de play que esta a la par, observa el hash generado
+### 7.14.2 En una sesión de Query Tools de PgAdmin 4, inserta un empleado
+```sql
+INSERT INTO empleados(nombre, email, telefono) 
+VALUES('Administrador del Sistema', 'admin@autofix.com','0000-0000');
+```
+### 7.14.3 Inserta el usuario, copia el Hash del punto 7.14.1 para el valor del password
+```sql
+INSERT INTO usuarios(username, password,activo,empleado_id) 
+VALUES('admin','$2a$10$qogS/89f/5HKv1zMvrkf6eHDwToojpmTf6aBJmvbp.SV17ef6AEH6',true,2);
+```
+El valor del empleado_id, depende de que número le haya asignado cuando insertó al empleado
+
+### 7.14.3 asignar el role al usuario
+```sql
+INSERT INTO usuarios_roles(usuario_id, role_id)
+VALUES(
+	(SELECT id FROM usuarios WHERE username='admin'),
+	(SELECT id FROM roles WHERE nombre='ADMIN')
+)
+```
+
+## 7.15 Probar en Postman
 
 **1. Registro de un cliente**
 
