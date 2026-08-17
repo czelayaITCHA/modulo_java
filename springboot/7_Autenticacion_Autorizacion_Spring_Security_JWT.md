@@ -933,7 +933,15 @@ Dos capas de autorización trabajando juntas: `@PreAuthorize` por role, y una ve
     }
 ```
 
-El mismo patrón aplica al resto de tus Controllers: `@PreAuthorize` para "¿tiene el role correcto?", y una comparación manual contra `AuthenticatedUser` cuando la pregunta es "¿es su propio dato?".
+El mismo patrón aplica al resto de tus Controllers: `@PreAuthorize` para "¿tiene el role correcto?", y una comparación manual contra `AuthenticatedUser` cuando la pregunta es "¿es su propio dato?". Hágalo para los demás controladores de acuerdo a la siguiente tabla:
+
+| Controller | GET | POST | PUT | PATCH estado | DELETE |
+|---|---|---|---|---|---|
+| `MarcaController` | sin restricción | `ADMIN`, `RECEPCIONISTA` | `ADMIN`, `RECEPCIONISTA` | — | `ADMIN` |
+| `ModeloController` | sin restricción | `ADMIN`, `RECEPCIONISTA` | `ADMIN`, `RECEPCIONISTA` | — | `ADMIN` |
+| `RepuestoServicioController` | sin restricción | `ADMIN`, `RECEPCIONISTA` | `ADMIN`, `RECEPCIONISTA` | — | `ADMIN` |
+| `VehiculoController` | *(ya está definido, en este punto)* | `ADMIN`, `RECEPCIONISTA` | `ADMIN`, `RECEPCIONISTA` | — | `ADMIN` |
+| `OrdenTrabajoController` | sin restricción | `ADMIN`, `RECEPCIONISTA` | `ADMIN`, `RECEPCIONISTA` | `ADMIN`, `RECEPCIONISTA`, `MECANICO` | `ADMIN` |
 
 ## 7.14 Probar en Postman
 
