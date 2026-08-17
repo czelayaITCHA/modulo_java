@@ -1010,8 +1010,8 @@ Respuesta (`200 Ok`):
     },
     "message": "Inicio de sesión exitoso"
 }
-
-**1. Registro de un cliente**
+```
+**2. Registro de un cliente**
 
 `POST http://localhost:8080/api/auth/register`
 ```json
@@ -1036,4 +1036,4 @@ Respuesta (`201 Created`):
   }
 }
 ```
-Copie el `token` — lo necesitas para todo lo demás.
+**3. Probar endpoints para verificar accesos según rol de usuario
