@@ -63,7 +63,6 @@ A partir de aquí, **toda** llamada a `autofix-api` en el resto del proyecto se 
 ## 2.4 `AuthContext` — el estado global de sesión
 
 ```jsx
-// src/auth/AuthContext.jsx
 import { createContext, useContext, useState, useEffect } from "react";
 import { jwtDecode } from "jwt-decode";
 import { CLAVE_TOKEN } from "../utils/constants";
@@ -145,7 +144,7 @@ export function AuthProvider({ children }) {
 // Único punto donde se traduce el payload del token a la forma que usa
 // el resto de la app - si el backend agrega/renombra un claim, solo se
 // ajusta aquí.
-function mapearPayload(payload) {
+const mapearPayload = (payload) => {
   return {
     username: payload.sub,
     nombre: payload.nombre,
@@ -156,7 +155,7 @@ function mapearPayload(payload) {
   };
 }
 
-export function useAuth() {
+export const useAuth = () => {
   const context = useContext(AuthContext);
   if (!context) {
     throw new Error("useAuth debe usarse dentro de un AuthProvider");
