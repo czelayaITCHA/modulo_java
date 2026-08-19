@@ -169,7 +169,7 @@ export const useAuth = () => {
 import { Navigate } from "react-router-dom";
 import { useAuth } from "./AuthContext";
 
-export default RutaProtegida = ({children, rolesPermisos}) => {
+export default function RutaProtegida ({children, rolesPermisos}) {
     const {estaAutenticado, cargando, tienePermiso} = useAuth();
 
     if(cargando){
@@ -272,7 +272,7 @@ export default function LoginPage() {
 ```jsx
 import { useAuth } from "../auth/AuthContext";
 
-export default Navbar = ({ onToggleSidebar }) => {
+export default function Navbar({ onToggleSidebar }) {
   const { usuario, logout } = useAuth();
 
   return (
@@ -332,7 +332,7 @@ const opcionesMenu = [
   { etiqueta: "Gestión de Usuarios", icono: "pi pi-user-edit", ruta: "/usuarios", rolesPermitidos: ["ADMIN"] },
 ];
 
-export default Sidebar = ({ isOpen }) => {
+export default function Sidebar ({ isOpen }) {
   const { usuario, tienePermiso } = useAuth();
   const [submenuAbierto, setSubmenuAbierto] = useState(null);
 
@@ -434,7 +434,7 @@ const SubmenuItem = ({ opcion, abierto, onToggle }) => {
 ```
 ## 2.9 Crear el componente Footer.jsx en la carpeta layout
 ```jsx
-export default Footer = () =>{
+export default function Footer(){
   return (
     <footer className="px-4 md:px-6 py-3 text-center text-xs text-slate-400 border-t border-slate-200 bg-white shrink-0">
       © {new Date().getFullYear()} AutoFix — Sistema de gestión de taller mecánico
@@ -451,7 +451,7 @@ import Navbar from "../layout/Navbar";
 import Sidebar from "../layout/Sidebar";
 import Footer from "../layout/Footer";
 
-export default AppLayout = () => {
+export default function AppLayout(){
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const location = useLocation();
 
