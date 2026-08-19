@@ -198,10 +198,11 @@ Con el contenido temporal de `App.jsx` de arriba, agrega momentáneamente un com
 ```jsx
 import { Button } from "primereact/button";
 
-function App() {
+const App = () => {
   return (
     <div className="p-8">
-      <h1 className="text-2xl font-bold mb-4">AutoFix</h1>
+      <h1 className="text-2xl font-bold text-blue-600">AutoFix</h1>
+      <p>Proyecto configurado correctamente.</p>
       <Button label="Probar" icon="pi pi-check" className="bg-red-500" />
     </div>
   );
