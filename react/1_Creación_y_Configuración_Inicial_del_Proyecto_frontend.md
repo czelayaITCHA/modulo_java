@@ -44,7 +44,7 @@ autofix-app/
 
 ## 1.4 Instalar Tailwind CSS 3.x (no 4.x)
 
-Tailwind 4 cambió por completo su forma de configurarse (ya no usa `tailwind.config.js` por defecto). Para mantenernos en el mismo patrón que `sife-app`, fijamos la versión 3 explícitamente:
+Tailwind 4 cambió por completo su forma de configurarse (ya no usa `tailwind.config.js` por defecto), fijamos la versión 3 explícitamente:
 
 ```bash
 npm install -D tailwindcss@^3.4.17 postcss autoprefixer
