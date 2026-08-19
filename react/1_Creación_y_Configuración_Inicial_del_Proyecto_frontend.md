@@ -149,10 +149,10 @@ src/
 Por ahora, `Router.jsx` y `AuthContext.jsx` **todavía no existen** — los construimos en la próxima guía. Deje `App.jsx` con un contenido temporal simple mientras tanto:
 
 ```jsx
-function App() {
+const App = () => {
   return (
     <div className="p-8">
-      <h1 className="text-2xl font-bold">AutoFix</h1>
+      <h1 className="text-2xl font-bold text-blue-600">AutoFix</h1>
       <p>Proyecto configurado correctamente.</p>
     </div>
   );
