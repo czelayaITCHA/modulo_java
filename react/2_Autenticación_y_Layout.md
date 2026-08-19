@@ -192,3 +192,16 @@ export default RutaProtegida = ({children, rolesPermisos}) => {
 
 }
 ```
+## 2.6 Crear el componente Login.jsx en la carpeta auth
+
+## 2.7 Crear el componente Navbar.jsx en la carpeta layout
+
+## 2.8 Crear el componente Sidebar.jsx en la carpeta layout
+
+## 2.9 Crear el componente Footer.jsx en la carpeta layout
+
+## 2.10 Crear el componente AppLayout en la carpeta app
+
+## 2.11 Definir sistema de rutas en Router.jsx
+
+## 2.12 Actualizar los archivos App.jsx y main.jsx
