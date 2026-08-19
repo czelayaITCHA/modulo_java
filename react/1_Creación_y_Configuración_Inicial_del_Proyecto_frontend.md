@@ -83,7 +83,7 @@ npm install primereact@^10.9.7 primeicons@^7.0.0
 
 ## 1.6 Configurar `src/index.css` — capas de cascada (Tailwind + PrimeReact sin conflictos)
 
-Reemplaza el contenido de `src/index.css` por esto (mismo patrón exacto que ya funciona en `sife-app`):
+Reemplaza el contenido de `src/index.css` por esto:
 
 ```css
 @layer tailwind-base, primereact, tailwind-utilities;
