@@ -217,9 +217,9 @@ npm run dev
 
 | # | Qué revisar | Resultado esperado |
 |---|---|---|
-| 1 | Color del botón | Rojo (`bg-red-500` de Tailwind), no el azul por defecto de PrimeReact — confirma que las capas están en el orden correcto |
-| 2 | Forma del botón | Con el estilo redondeado/padding propio de PrimeReact, no un `<button>` sin estilo — confirma que el tema sí cargó |
+| 1 | Color del botón | Rojo (`bg-red-500` de Tailwind), no el azul por defecto de PrimeReact — confirme que las capas están en el orden correcto |
+| 2 | Forma del botón | Con el estilo redondeado/padding propio de PrimeReact, no un `<button>` sin estilo — confirme que el tema sí cargó |
 | 3 | El ícono `pi pi-check` | Se ve el ✓ real, no un cuadro vacío |
 | 4 | Consola del navegador (F12) | Sin errores de "Failed to resolve import", sin warning de licencia PrimeUI |
 
-Si los 4 puntos se cumplen, el proyecto está listo para empezar a construir sobre él. Quita el `<Button>` de prueba (o déjalo, ya no importa) y sigue con la siguiente guía: `AuthContext` + `Router`, para conectar `autofix-app` con el login de `autofix-api`.
+Si los 4 puntos se cumplen, el proyecto está listo para empezar a construir sobre él. Quite el `<Button>` de prueba (o déjelo, ya no importa) y sigue con la siguiente guía: `AuthContext` + `Router`, para conectar `autofix-app` con el login de `autofix-api`.
