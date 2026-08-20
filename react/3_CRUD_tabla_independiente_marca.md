@@ -370,3 +370,63 @@ export default function Marcas() {
     );
 }
 ```
+## 3.6 Regla del proyecto: SweetAlert2 vs. Toast
+
+Se aplica de forma consistente en todo el CRUD, y se repite en cada catálogo que sigue:
+
+- **SweetAlert2** → solo cuando hay que **decidir algo** (confirmar una acción destructiva). En este componente, únicamente `confirmDelete`.
+- **Toast de PrimeReact** → solo para **informar un resultado ya ocurrido** (éxito o error de una petición que ya se ejecutó). Nunca se usa para pedir confirmación.
+- **Los errores de validación del formulario** (campo vacío, muy corto, duplicado) no usan ninguno de los dos - se muestran inline, justo bajo el campo (`<small className="p-error">`), porque es más rápido de leer que esperar un popup.
+
+## 3.7 Clases que parecen de Tailwind pero son de PrimeFlex (no instalado en este proyecto)
+
+Vale la pena tenerlas identificadas, porque no generan ningún error - simplemente no aplican ningún estilo, y ese tipo de bug es el más difícil de notar:
+
+| Clase que NO funciona aquí | Equivalente real de Tailwind |
+|---|---|
+| `justify-content-center` / `justify-content-start` / `justify-content-end` | `justify-center` / `justify-start` / `justify-end` |
+| `align-items-center` | `items-center` |
+| `justify-items-start` (válida en Tailwind, pero para *grid*, no *flex*) | `justify-start` |
+| `shadow-2` | `shadow-md` (o el nivel de sombra de Tailwind que prefieras) |
+| `border-round-xl` | `rounded-xl` |
+
+## 3.8 Piezas de PrimeReact usadas, en corto
+
+| Componente | Para qué |
+|---|---|
+| `DataTable` + `Column` | Tabla principal, con paginación y `responsiveLayout="stack"` (en pantallas menores a `768px`, cada fila se convierte en tarjeta apilada) |
+| `Toolbar` | Contenedor del botón "Nueva Marca" |
+| `Dialog` | El único que queda: creación/edición (la confirmación de borrado ahora es SweetAlert2, no un `Dialog`) |
+| `Toast` | Notificaciones de éxito/error - se controla con una `ref`, no con estado |
+| `IconField` + `InputIcon` | El input de búsqueda con la lupa integrada |
+| `classNames` (de `primereact/utils`) | Aplica `p-invalid` condicionalmente, para el borde rojo de validación |
+
+## 3.9 Conectar la ruta
+
+```jsx
+// src/app/Router.jsx
+import Marcas from "../components/catalogos/Marcas";
+// ...
+<Route path="/catalogos/marcas" element={<Marcas />} />
+```
+
+## 3.10 Verificar que todo funciona
+
+Con `autofix-api` corriendo (ya con el CORS de la sección 3.4 configurado) y sesión iniciada:
+
+| # | Prueba | Resultado esperado |
+|---|---|---|
+| 1 | Cargar la pantalla | Sin errores de CORS en consola; la tabla muestra las marcas existentes |
+| 2 | Crear una marca válida | Diálogo se cierra, `Toast` verde con el mensaje del backend, tabla se refresca sola |
+| 3 | Crear con nombre vacío | Error inline "El nombre es requerido.", no se manda ninguna petición |
+| 4 | Crear con nombre ya existente **en la tabla cargada** | Error inline instantáneo, sin esperar respuesta del backend (validación de frontend) |
+| 5 | Crear con nombre duplicado que el frontend no detectó (ej. otra persona lo creó justo antes) | `Toast` rojo con el mensaje `409` real del backend |
+| 6 | Editar una marca sin cambiar el nombre | Se guarda sin marcar "duplicado" (la validación se excluye a sí misma correctamente) |
+| 7 | Eliminar una marca | Aparece el diálogo de **SweetAlert2** (no un `Dialog` de PrimeReact) pidiendo confirmar; al confirmar, `Toast` verde y desaparece de la tabla |
+| 8 | Cancelar la eliminación en SweetAlert2 | La marca sigue en la tabla, sin ningún `Toast` (cancelar no es un resultado que informar) |
+| 9 | Buscar por nombre | Filtra la tabla en vivo, sin pedir nada nuevo al backend |
+| 10 | Responsividad | Reducir la ventana a menos de 768px convierte la tabla en tarjetas apiladas |
+
+## 3.11 Una limitación conocida, sin resolver todavía
+
+Si intenta eliminar una `Marca` que ya tiene `Modelo`s asociados, el backend no tiene hoy una validación de negocio para ese caso (a diferencia de `RepuestoServicio`, `Modelo` o `Vehiculo`, que sí protegen su borrado). La base de datos rechazará la operación por la restricción de llave foránea, y verás el mensaje genérico de error de base de datos en el `Toast`, no uno específico como *"no se puede eliminar, tiene modelos asociados"*. Se puede cerrar agregando la misma protección que ya tienen las otras entidades.
