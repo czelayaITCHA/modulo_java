@@ -424,4 +424,242 @@ public class ReporteController {
 
 `ContentDisposition.attachment().filename(...)` es lo que le indica al navegador "descarga esto con este nombre", en vez de intentar mostrarlo dentro de la misma pestaña.
 
-## 7.8 El servicio del frontend — el detalle no obvio de descargar un blob
+## 7.8 Crear el servicio en el frontend
+
+```js
+import axiosClient from "./axiosClient";
+
+export const reporteService = {
+  descargarReporteOrdenes: async (fechaInicio, fechaFin) => {
+    try {
+      return await axiosClient.get("/reportes/ordenes-trabajo", {
+        params: { fechaInicio, fechaFin },
+        responseType: "blob",
+      });
+    } catch (error) {
+      
+      if (error.response?.data instanceof Blob) {
+        const texto = await error.response.data.text();
+        try {
+          error.response.data = JSON.parse(texto);
+        } catch {
+          // el cuerpo no era JSON válido - se deja tal cual
+        }
+      }
+      throw error;
+    }
+  },
+};
+```
+
+**Por qué esto merece atención especial:** `responseType: "blob"` le dice a axios "trata la respuesta como datos binarios crudos" — necesario para poder descargar el PDF. Pero esa misma configuración aplica también a las respuestas de **error**: si el backend responde `400` con `{"message": "..."}`, axios igual la entrega como un `Blob`, no como el objeto JSON ya parseado que `mostrarErrorApi` espera leer (`error.response?.data?.message`). Sin esta conversión manual, cualquier error de este endpoint mostraría un mensaje genérico en vez del mensaje real del backend.
+
+## 7.9 `ReporteOrdenes.jsx` — fechas en `Calendar` separados
+
+```jsx
+// src/reports/ReporteOrdenes.jsx
+import { useState, useRef } from "react";
+import { Dialog } from "primereact/dialog";
+import { Calendar } from "primereact/calendar";
+import { Button } from "primereact/button";
+import { Toast } from "primereact/toast";
+
+import { reporteService } from "../services/reporteService";
+import { ordenTrabajoService } from "../services/ordenTrabajoService";
+import { mostrarErrorApi } from "../utils/alertasApi";
+
+const formatearFechaParaBackend = (fecha) => {
+    if (!fecha) return null;
+    const year = fecha.getFullYear();
+    const month = String(fecha.getMonth() + 1).padStart(2, "0");
+    const day = String(fecha.getDate()).padStart(2, "0");
+    return `${year}-${month}-${day}`;
+};
+
+export default function ReporteOrdenes({ visible, onHide }) {
+    const [fechaInicio, setFechaInicio] = useState(null);
+    const [fechaFin, setFechaFin] = useState(null);
+    const [generando, setGenerando] = useState(false);
+
+    const toast = useRef(null);
+
+    const generarReporte = async () => {
+        if (!fechaInicio || !fechaFin) {
+            toast.current.show({ severity: "warn", summary: "Atención", detail: "Seleccione ambas fechas" });
+            return;
+        }
+        if (fechaInicio > fechaFin) {
+            toast.current.show({
+                severity: "warn",
+                summary: "Atención",
+                detail: "La fecha de inicio no puede ser posterior a la fecha fin",
+            });
+            return;
+        }
+
+        const fechaInicioStr = formatearFechaParaBackend(fechaInicio);
+        const fechaFinStr = formatearFechaParaBackend(fechaFin);
+
+        //abrir una nueva pestaña en el navegador
+        const nuevaPestana = window.open("", "_blank");
+        if (nuevaPestana) {
+            nuevaPestana.document.write("Generando el reporte...");
+        }
+
+        setGenerando(true);
+        try {
+            const ordenesEnRango = await ordenTrabajoService.getAll({
+                fechaInicio: fechaInicioStr,
+                fechaFin: fechaFinStr,
+            });
+
+            if (ordenesEnRango.length === 0) {
+                //no hay nada que mostrar se cierra la pestaña
+                if (nuevaPestana) nuevaPestana.close();
+                toast.current.show({
+                    severity: "warn",
+                    summary: "Atención",
+                    detail: "No se encontraron órdenes de trabajo en el rango seleccionado.",
+                    life: 4000,
+                });
+                return;
+            }
+
+            const respuesta = await reporteService.descargarReporteOrdenes(fechaInicioStr, fechaFinStr);
+
+            const blobUrl = window.URL.createObjectURL(new Blob([respuesta.data], { type: "application/pdf" }));
+
+            if (nuevaPestana) {
+                nuevaPestana.location.href = blobUrl;
+            } else {
+                toast.current.show({
+                    severity: "warn",
+                    summary: "Atención",
+                    detail: "El navegador bloqueó la ventana emergente. Habilite las ventanas emergentes para este sitio.",
+                    life: 6000,
+                });
+            }
+
+            onHide();
+        } catch (error) {
+            if (nuevaPestana) nuevaPestana.close();
+            mostrarErrorApi(toast, error, "No se pudo generar el reporte");
+        } finally {
+            setGenerando(false);
+        }
+    };
+
+    return (
+        <Dialog
+            visible={visible}
+            style={{ width: "28rem" }}
+            header="Reporte de Órdenes de Trabajo"
+            modal
+            onHide={onHide}
+            footer={
+                <div className="flex justify-end gap-2">
+                    <Button label="Cancelar" icon="pi pi-times" outlined onClick={onHide} disabled={generando} />
+                    <Button label="Generar Reporte" icon="pi pi-file-pdf" onClick={generarReporte} loading={generando} />
+                </div>
+            }
+        >
+            <Toast ref={toast} />
+
+            <div className="field">
+                <label className="font-bold block mb-2">Fecha inicio</label>
+                <Calendar
+                    value={fechaInicio}
+                    onChange={(e) => setFechaInicio(e.value)}
+                    dateFormat="dd/mm/yy"
+                    className="w-full"
+                    showIcon
+                />
+            </div>
+
+            <div className="field">
+                <label className="font-bold block mb-2">Fecha fin</label>
+                <Calendar
+                    value={fechaFin}
+                    onChange={(e) => setFechaFin(e.value)}
+                    dateFormat="dd/mm/yy"
+                    className="w-full"
+                    showIcon
+                />
+            </div>
+        </Dialog>
+    );
+}
+```
+
+Dos `Calendar` de PrimeReact, cada uno con su propio estado (`fechaInicio`, `fechaFin`) — a diferencia del filtro de `OrdenesTrabajo.jsx`, que usa un solo `Calendar` en modo `selectionMode="range"`. Aquí se pidió explícitamente capturarlas por separado.
+
+
+
+## 7.10 Crear `Reportes.jsx` — el contenedor
+
+```jsx
+// src/reports/Reportes.jsx
+import { useState } from "react";
+import ReporteOrdenes from "./ReporteOrdenes";
+
+const reportesDisponibles = [
+    {
+        id: "ordenes-trabajo",
+        titulo: "Órdenes de Trabajo",
+        descripcion: "Reporte de órdenes agrupado por estado, para un rango de fechas.",
+        icono: "pi pi-file-pdf",
+    },
+];
+
+export default function Reportes() {
+    const [reporteActivo, setReporteActivo] = useState(null);
+
+    return (
+        <div className="p-2 md:p-4">
+            <h4 className="text-xl font-bold text-gray-700 mb-4">Reportes</h4>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                {reportesDisponibles.map((reporte) => (
+                    <button
+                        key={reporte.id}
+                        onClick={() => setReporteActivo(reporte.id)}
+                        className="text-left bg-white shadow-md rounded-xl p-5 hover:shadow-lg transition-shadow border border-gray-100"
+                    >
+                        <i className={`${reporte.icono} text-3xl text-blue-600 mb-2 block`} />
+                        <h5 className="font-bold text-gray-800">{reporte.titulo}</h5>
+                        <p className="text-sm text-gray-500 mt-1">{reporte.descripcion}</p>
+                    </button>
+                ))}
+            </div>
+
+            {reporteActivo === "ordenes-trabajo" && (
+                <ReporteOrdenes visible={true} onHide={() => setReporteActivo(null)} />
+            )}
+        </div>
+    );
+}
+```
+
+Es deliberadamente simple: un arreglo `reportesDisponibles` con una tarjeta por reporte, y un solo estado (`reporteActivo`) que decide cuál `Dialog` mostrar. Agregar un reporte futuro es: crear su propio componente (como `ReporteOrdenes.jsx`), agregar una entrada al arreglo, y una condición más al final del `return`.
+
+## 7.11 Conectar la ruta
+
+```jsx
+// src/app/Router.jsx
+import Reportes from "../reports/Reportes";
+// ...
+<Route path="/reportes" element={
+    <RutaProtegida rolesPermisos={["ADMIN","RECEPCIONISTA"]}>
+        <Reportes />
+    </RutaProtegida>
+} />
+```
+## 7.12 Resultado Final
+
+<img width="1176" height="723" alt="image" src="https://github.com/user-attachments/assets/024d4f29-4948-4c6b-a7ac-fd966e2c89b6" />
+
+<img width="1276" height="953" alt="image" src="https://github.com/user-attachments/assets/a0b73ed9-53fe-4d54-9c6f-a0229f03be80" />
+
+
+
+
