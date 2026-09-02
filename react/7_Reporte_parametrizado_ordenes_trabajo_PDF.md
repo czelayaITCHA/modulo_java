@@ -321,4 +321,107 @@ public class ReporteOrdenesTrabajoService {
     //fin de la clase privada
 }
 ```
+## 7.4 Las 3 secciones, una por una
 
+### Encabezado (`agregarEncabezado`)
+
+**Para que el logo aparezca de verdad**, coloque un archivo real en `src/main/resources/static/logo.png` 
+
+### Detalle (`agregarDetalle` + `construirTablaOrdenes`)
+
+Se recorre `EstadoOrden.values()` — el orden natural del enum (`PENDIENTE, EN_PROCESO, COMPLETADA, ENTREGADA, CANCELADA`), que es también el orden real del flujo de negocio — y por cada estado que tenga al menos una orden, se agrega un subtítulo con el conteo y una `PdfPTable` con las columnas: Número, Fecha, Placa, Cliente, Mecánico, Total.
+
+**`PdfPTable`, la pieza central de cualquier reporte tabular en iText:**
+```java
+PdfPTable tabla = new PdfPTable(new float[]{2f, 1.5f, 1.5f, 2f, 2f, 1.5f});
+```
+El arreglo de `float` define el **ancho relativo** de cada columna, no un ancho en puntos — la primera columna es proporcionalmente igual de ancha que la cuarta (`2f` cada una), y ambas más anchas que la segunda (`1.5f`). Las celdas se agregan una por una, en orden, con `tabla.addCell(...)` — no hay un concepto de "fila" explícito, iText simplemente llena la tabla de izquierda a derecha y salta de fila automáticamente al completar el número de columnas declarado.
+
+### Resumen (`agregarResumen`)
+
+Reutiliza exactamente el mismo patrón de tabla que el detalle, pero con subtotales: para cada estado, cuenta cuántas órdenes tiene y suma sus totales (`BigDecimal::add`, nunca sumando `double` a mano, para no arrastrar errores de redondeo con dinero). Al final, una fila de "Total general" con fondo gris claro para distinguirla visualmente del resto.
+
+## 7.5 Márgenes, tamaño de papel, y la conversión de unidades
+
+```java
+private static final float CM = 28.3465f;
+Document document = new Document(PageSize.LETTER, 2.5f * CM, 2.5f * CM, 2.5f * CM, 2.5f * CM);
+```
+
+`PageSize.LETTER` es una constante ya definida por iText (carta, 8.5 × 11 pulgadas). Los 4 argumentos de márgenes van en el orden: **izquierdo, derecho, superior, inferior** — como en este reporte los 4 son iguales (2.5 cm), no importa el orden, pero vale la pena tenerlo presente para reportes futuros con márgenes distintos entre sí.
+
+## 7.6 Pie de página en todas las páginas: `PdfPageEventHelper`
+
+Este es el mecanismo que resuelve "se necesita esto en cada página, sin saber de antemano cuántas páginas tendrá el documento":
+
+```java
+writer.setPageEvent(new FooterEvent(fechaGeneracion));
+```
+
+`PdfPageEventHelper` es una clase base de iText con métodos vacíos para cada momento del ciclo de vida del documento (`onOpenDocument`, `onStartPage`, `onEndPage`, `onCloseDocument`, entre otros) — se sobrescribe solo el que se necesita. Aquí, `onEndPage` se dispara automáticamente **al terminar cada página**, sin importar si el documento termina teniendo 1 página o 50.
+
+Dentro de `onEndPage`, en vez de `document.add(...)` (que agrega contenido al flujo normal) se usa `PdfContentByte` — el "lienzo" de bajo nivel de esa página específica, que permite dibujar en una coordenada `(x, y)` exacta:
+
+```java
+ColumnText.showTextAligned(cb, Element.ALIGN_LEFT, footerIzquierda,
+        document.leftMargin(), document.bottom() - 20, 0);
+```
+
+`document.bottom()` es el borde inferior del área de contenido (ya dentro del margen); se resta un poco más (`-20`) para separar visualmente el pie de página del margen inferior. `writer.getPageNumber()` devuelve el número de la página **actual**, disponible automáticamente en este punto del ciclo de vida.
+
+> Nota: este reporte muestra "Página N", no "Página N de M" — mostrar el total de páginas exige una técnica adicional de iText (`PdfTemplate`, un marcador de posición que se rellena después de conocer el total), fuera del alcance de esta guía. Puede agregarse más adelante si se necesita.
+
+## 7.7 Crear el controlador
+
+```java
+
+package com.devsv.autofix_api.controllers;
+
+import com.devsv.autofix_api.services.ReporteOrdenesTrabajoService;
+import lombok.RequiredArgsConstructor;
+import org.springframework.core.io.ByteArrayResource;
+import org.springframework.format.annotation.DateTimeFormat;
+import org.springframework.http.ContentDisposition;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.web.bind.annotation.*;
+
+import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
+
+@RestController
+@CrossOrigin
+@RequestMapping("/api/reportes")
+@RequiredArgsConstructor
+public class ReporteController {
+    private final ReporteOrdenesTrabajoService reporteOrdenesTrabajoService;
+
+    @PreAuthorize("hasAnyRole('ADMIN', 'RECEPCIONISTA')")
+    @GetMapping("ordenes-trabajo")
+    public ResponseEntity<ByteArrayResource> generarPdfOrdenes(
+            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate fechaInicio,
+            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate fechaFin
+            ){
+        byte[] pdf = reporteOrdenesTrabajoService.generarReporte(fechaInicio, fechaFin);
+
+        String nombreArchivo = "ordenes-trabajo_" +
+                fechaInicio.format(DateTimeFormatter.ofPattern("yyyyMMdd")) +
+                fechaFin.format(DateTimeFormatter.ofPattern("yyyyMMdd")) + ".pdf";
+        ByteArrayResource resource = new ByteArrayResource(pdf);
+
+        return ResponseEntity.ok()
+                .contentType(MediaType.APPLICATION_PDF)
+                .header(HttpHeaders.CONTENT_DISPOSITION,
+                        ContentDisposition.attachment().filename(nombreArchivo)
+                                .build().toString())
+                .contentLength(pdf.length)
+                .body(resource);
+    }
+}
+```
+
+`ContentDisposition.attachment().filename(...)` es lo que le indica al navegador "descarga esto con este nombre", en vez de intentar mostrarlo dentro de la misma pestaña.
+
+## 7.8 El servicio del frontend — el detalle no obvio de descargar un blob
