@@ -34,10 +34,10 @@ con su propio `Dockerfile`, en vez de uno solo.
 
 ## Prerrequisito: PostgreSQL instalado en tu PC
 
-Si todavía no lo tienes:
-1. Descarga el instalador desde <https://www.postgresql.org/download/windows/>
-2. Durante la instalación, anota la contraseña que le pongas al usuario `postgres`
-3. Crea la base de datos y el usuario que usará la app:
+Si todavía no lo tiene:
+1. Descargue el instalador desde <https://www.postgresql.org/download/windows/>
+2. Durante la instalación, anote la contraseña que le ponga al usuario `postgres`
+3. Cree la base de datos y el usuario que usará la app:
 
 ```sql
 CREATE DATABASE autofix_db # ya esta creada;
@@ -47,7 +47,7 @@ GRANT ALL PRIVILEGES ON DATABASE autofix_db TO autofix;
 
 **Importante**: el nombre `autofix_db` no es arbitrario — es el valor por
 defecto que ya trae `application.properties` (`${DB_NAME:autofix_db}`). Si
-usas otro nombre, usuario o contraseña, solo asegúrate de reflejarlo en las
+usa otro nombre, usuario o contraseña, solo asegúrase de reflejarlo en las
 variables `DB_NAME`/`DB_USER`/`DB_PASSWORD` del `docker-compose.yml` más
 abajo.
 
@@ -56,18 +56,18 @@ acepta conexiones desde `localhost` — y un contenedor Docker, aunque corra
 en la misma PC, técnicamente es una "red" distinta. Hay que decirle a
 Postgres que acepte conexiones desde ahí también:
 
-1. Busca el archivo `postgresql.conf` (con el instalador oficial, suele
+1. Busque el archivo `postgresql.conf` (con el instalador oficial, suele
    estar en `C:\Program Files\PostgreSQL\<version>\data\postgresql.conf`).
-   Busca la línea `listen_addresses` y confirma que diga `'*'` (todas las
+   Busque la línea `listen_addresses` y confirme que diga `'*'` (todas las
    interfaces), no solo `'localhost'`.
-2. En el mismo directorio, edita `pg_hba.conf` y agrega esta línea al
+2. En el mismo directorio, edite `pg_hba.conf` y agrega esta línea al
    final (permite conexiones desde la red interna de Docker):
    ```
    host    all             all             172.17.0.0/16           scram-sha-256
    ```
-3. Reinicia el servicio de PostgreSQL (desde "Servicios" de Windows, o
+3. Reinicie el servicio de PostgreSQL (desde "Servicios" de Windows, o
    `net stop postgresql-x64-16` / `net start postgresql-x64-16`, ajustando
-   el nombre exacto del servicio a tu versión).
+   el nombre exacto del servicio a su versión).
 
 ---
 
