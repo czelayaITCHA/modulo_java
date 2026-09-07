@@ -213,6 +213,7 @@ services:
     build:
       context: ./autofix-api
       dockerfile: Dockerfile
+    image: autofix-api:v1.0.0
     container_name: autofix_api
     restart: unless-stopped
     ports:
@@ -235,6 +236,7 @@ services:
       args:
         VITE_API_URL: http://localhost:8080/api
         VITE_IMAGES_URL: http://localhost:8080/images
+    image: autofix-app:v1.0.0
     container_name: autofix_app
     restart: unless-stopped
     ports:
